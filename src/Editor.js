@@ -1,11 +1,14 @@
 import React, { Component } from 'react';
 import DlgAbout from './DlgAbout';
+import DlgColor from './DlgColor';
 // import AceEditor from 'react-ace';
 // import 'brace/mode/html';
 // import 'brace/theme/tomorrow_night';
 import data from './Data';
 import Browser from './Browser2';
 import MyFs from './MyFs';
+import { SketchPicker } from 'react-color'
+import PropEdit from './PropEdit';
 const tool_types = [
   'move',
   'pen',
@@ -319,7 +322,9 @@ class HtmlEditor extends Component {
     });
     this.state = {
       show_about: false,
-      previewSize: { width: '50vw', height: '50vh' },
+      show_color:false,
+      show_prop:"none",
+      previewSize: { width: '220px', height: '300px' },
       css: css,
       // head:`<meta charset="utf-8"/>`,
       html: html,
@@ -330,9 +335,25 @@ class HtmlEditor extends Component {
       selectValue: '',
       active_tool: 0,
       pen_width: 3,
+      color:color,
+      selected:null,
     };
     this.cssEditor = React.createRef();
     this.htmlEditor = React.createRef();
+  }
+  propChange=(dict)=>{
+    console.log(dict);
+      if(this.state.selected[0]){
+        this.state.selected[0].set(dict);
+        canvas.renderAll();
+      }
+  }
+  onChangeComplete=(vcolor)=>{
+    // console.log(vcolor);
+
+    this.setState({color:vcolor.hex});
+    color=vcolor.hex;
+    canvas.freeDrawingBrush.color = vcolor.hex;
   }
   componentDidMount() {
     // this.divPreview = document.getElementById('preview');
@@ -359,6 +380,7 @@ class HtmlEditor extends Component {
     canvas.freeDrawingBrush.color = color; //设置自由绘颜色
     canvas.freeDrawingBrush.width = drawWidth;
     // this.bind_events();
+    this.bind_select();
   }
   unbind_events = () => {
     canvas.off('mouse:down');
@@ -366,6 +388,29 @@ class HtmlEditor extends Component {
     canvas.off('mouse:up');
     canvas.off('selection:created');
   };
+  bind_select=()=>{
+    let self=this;
+    canvas.on("selection:cleared",(options)=>{
+
+      self.setState({selected:options.selected});
+      console.log("selection:cleared");
+      console.log(options);
+    });
+
+    canvas.on("selection:updated",(options)=>{
+
+      self.setState({selected:options.selected});
+      console.log("selection:updated");
+      console.log(options);
+    });
+
+    canvas.on("selection:created",(options)=>{
+
+      self.setState({selected:options.selected});
+      console.log("selection:created");
+      console.log(options);
+    });
+  }
   bind_events = () => {
     //绑定画板事件
     canvas.on('mouse:down', function(options) {
@@ -422,13 +467,14 @@ class HtmlEditor extends Component {
     if (path.parse(filepath).ext === '.svg') {
       fabric.loadSVGFromString(content, function(objects, options) {
         var obj = fabric.util.groupSVGElements(objects, options);
+        canvas.clear();
         canvas.add(obj).renderAll();
       });
     } else if (path.parse(filepath).ext === '.json') {
       canvas.loadFromJSON(content);
     }
 
-    this.setState({ html: content, showPreview: 'flex' });
+    this.setState({ html: content, showPreview: 'none' });
   };
   open_click = () => {
     var dialog = electron.remote.dialog;
@@ -451,12 +497,13 @@ class HtmlEditor extends Component {
         if (path.parse(res[0]).ext === '.svg') {
           fabric.loadSVGFromString(content, function(objects, options) {
             var obj = fabric.util.groupSVGElements(objects, options);
+            canvas.clear();
             canvas.add(obj).renderAll();
           });
         } else {
           canvas.loadFromJSON(content);
         }
-        this.setState({ html: content, showPreview: 'flex' });
+        this.setState({ html: content, showPreview: 'none' });
       }
     );
   };
@@ -586,6 +633,7 @@ class HtmlEditor extends Component {
         '<!DOCTYPE html><html><head>\n\n<style>\n\n</style></head><body>\n\n</body></html>',
     });
     canvas.clear();
+    canvas.backgroundColor="rgb(100,100,200)";
   };
   handleDrag = width => {
     this.setState({ html_editor_h: width });
@@ -608,6 +656,7 @@ class HtmlEditor extends Component {
       canvas.skipTargetFind = false;
       canvas.selectable = true;
       this.unbind_events();
+      this.bind_select();
       return;
     } else {
       this.bind_events();
@@ -699,6 +748,9 @@ class HtmlEditor extends Component {
     //   onChange: canvas.renderAll.bind(canvas)
     // });
   };
+  change_color=()=>{
+    this.setState({show_color:true});
+  }
   render() {
     // console.log(this.state);
     // let $ = cheerio.load(this.state.html,{
@@ -749,12 +801,20 @@ class HtmlEditor extends Component {
         );
       }
     });
+    console.log("=====================================")
+    console.log(this.state);
     return (
       <div id="root_new">
         <DlgAbout
           showModal={this.state.show_about}
           closeModal={() => {
             this.setState({ show_about: false });
+          }}
+        />
+        <DlgColor
+          showModal={this.state.show_color}
+          closeModal={() => {
+            this.setState({ show_color: false });
           }}
         />
         <Browser onFileClick={this.onFileClick} />
@@ -796,11 +856,7 @@ class HtmlEditor extends Component {
               New
             </button>
             <button onClick={this.anim}>anim</button>
-            <label>pen width</label>
-            <input
-              value={this.state.pen_width}
-              onChange={this.pen_width_change}
-            />
+            
             <button onClick={this.anim_canvas}>test anim</button>
             <div>{this.state.filename}</div>
           </div>
@@ -823,7 +879,8 @@ class HtmlEditor extends Component {
               style={{
                 marginLeft: '60px',
                 width: '95%',
-                height: '100%',
+                height: 'calc(100vh - ${toolbar_h})',
+                backgroundColor:"#070",
               }}
             >
               <canvas
@@ -836,6 +893,40 @@ class HtmlEditor extends Component {
             </div>
           </div>
         </div>
+           <div id="contain_preview">
+             <button onClick={()=>{
+                if(this.state.showPreview==="none"){
+                  this.setState({showPreview:"flex"});
+                }
+                else{
+                  this.setState({showPreview:"none"}); 
+                }
+             }}>pen</button>
+           <div style={{margin:"10 10 10 10",with:"200px",height:"330px",
+              flexDirection:"column",
+              display:this.state.showPreview}}>
+             <div><label>pen width</label>
+            <input style={{width:"50px"}}
+              value={this.state.pen_width}
+              onChange={this.pen_width_change}
+            /></div>
+             <SketchPicker color={this.state.color} onChangeComplete={this.onChangeComplete} />
+           </div>
+          </div>
+          <div id="contain_prop">
+           <div style={{margin:"10 10 10 10",
+              display:this.state.show_prop}}>
+             <PropEdit selected={this.state.selected} propChange={this.propChange}/>
+           </div>
+           <button onClick={()=>{
+                if(this.state.show_prop==="none"){
+                  this.setState({show_prop:"block"});
+                }
+                else{
+                  this.setState({show_prop:"none"}); 
+                }
+             }}>prop</button>
+          </div>
         <style jsx="true">{`
           body {
             margin: 0 0 0 0;
@@ -855,6 +946,18 @@ class HtmlEditor extends Component {
             display:flex;
             flex-direction:column;
           }
+          #contain_prop {
+            background-color:#eee;
+            position:fixed;
+            display:flex;
+            flex-direction:column;
+            right:0;
+            bottom:0;
+            margin:0 0 0 0;
+            padding：0 0 0 0;
+            overflow: auto;
+            z-index:100;
+          }
           #contain_preview {
             background-color:#eee;
             position:fixed;
@@ -866,58 +969,6 @@ class HtmlEditor extends Component {
             padding：0 0 0 0;
             overflow: auto;
             z-index:100;
-          }
-          .SplitPane {
-            position: relative !important;
-          }
-          .Resizer {
-            background: #000;
-            opacity: 0.2;
-            z-index: 1;
-            -moz-box-sizing: border-box;
-            -webkit-box-sizing: border-box;
-            box-sizing: border-box;
-            -moz-background-clip: padding;
-            -webkit-background-clip: padding;
-            background-clip: padding-box;
-          }
-
-          .Resizer:hover {
-            -webkit-transition: all 2s ease;
-            transition: all 2s ease;
-          }
-
-          .Resizer.horizontal {
-            height: 11px;
-            margin: -5px 0;
-            border-top: 5px solid rgba(255, 255, 255, 0);
-            border-bottom: 5px solid rgba(255, 255, 255, 0);
-            cursor: row-resize;
-            width: 100%;
-          }
-
-          .Resizer.horizontal:hover {
-            border-top: 5px solid rgba(0, 0, 0, 0.5);
-            border-bottom: 5px solid rgba(0, 0, 0, 0.5);
-          }
-
-          .Resizer.vertical {
-            width: 11px;
-            margin: 0 -5px;
-            border-left: 5px solid rgba(255, 255, 255, 0);
-            border-right: 5px solid rgba(255, 255, 255, 0);
-            cursor: col-resize;
-          }
-
-          .Resizer.vertical:hover {
-            border-left: 5px solid rgba(0, 0, 0, 0.5);
-            border-right: 5px solid rgba(0, 0, 0, 0.5);
-          }
-          .Resizer.disabled {
-            cursor: not-allowed;
-          }
-          .Resizer.disabled:hover {
-            border-color: transparent;
           }
         `}</style>
       </div>

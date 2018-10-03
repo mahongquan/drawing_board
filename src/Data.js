@@ -64,7 +64,7 @@ class Data {
         Data.config.id = 0;
       }
       if (!Data.config.version) {
-        Data.config.version = '0.1';
+        Data.config.version = '0.2';
       }
       if (!Data.config.author) {
         Data.config.author = {
@@ -73,7 +73,7 @@ class Data {
         };
       }
       if (!Data.config.website) {
-        Data.config.website = 'http://github.com/mahongquan/notepad';
+        Data.config.website = 'http://github.com/mahongquan/drawing_board';
       }
       if (!Data.config.boards) {
         Data.config.boards = [];
