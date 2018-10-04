@@ -39,7 +39,8 @@ let _clipboard;
 
 //坐标转换
 function transformMouse(mouseX, mouseY) {
-  return { x: mouseX / window.zoom, y: mouseY / window.zoom };
+  let zoom=canvas.getZoom();
+  return { x: mouseX / zoom, y: mouseY / zoom };
 }
 //绘画方法
 function drawing() {
@@ -248,51 +249,7 @@ const electron = window.require('electron');
 const { ipcRenderer } = window.require('electron'); //
 const fontSize = 16;
 const toolbar_h = 70;
-const html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-
-</style>
-</head>
-<body>
-
-</body>
-</html>`;
-const css = `ul {
-    display:flex;
-    padding: 0;
-    margin:0 0 0 0;
-    list-style: none;
-    flex-wrap:wrap;
-    background-color: #777;
-    align-items: baseline;
-    justify-content: center;
-    align-content:center;
-    height:200;
-    width:200;
-}
-li {
-    background-color: #8cacea;
-    margin: 8px;
-    width:100px;
-    overflow:hidden;
-}
-li:first-child
-{ 
-    line-height:1em;
-    font-size:3em;
-    height:100px;
-}
-li:last-child
-{ 
-    line-height:1em;
-    font-size:2em;
-    height:200px;
-}`;
-class HtmlEditor extends Component {
+class Editor extends Component {
   cssChange = newv => {
     this.setState({ css: newv });
   };
@@ -324,6 +281,7 @@ class HtmlEditor extends Component {
       this.setState({ show_about: true });
     });
     this.state = {
+      zoom:1,
       mode: 'Pencil',
       shadow_color: '#00FF00',
       shadow_width: 10,
@@ -333,9 +291,6 @@ class HtmlEditor extends Component {
       show_prop: 'none',
       canvasSize: { width: '1000px', height: '1000px' },
       previewSize: { width: '220px', height: '300px' },
-      css: css,
-      // head:`<meta charset="utf-8"/>`,
-      html: html,
       showPreview: 'none',
       html_editor_h: 600,
       edit_width: 800,
@@ -496,7 +451,7 @@ class HtmlEditor extends Component {
     });
 
     window.canvas = canvas;
-    window.zoom = window.zoom ? window.zoom : 1;
+    // window.zoom = window.zoom ? window.zoom : 1;
 
     canvas.freeDrawingBrush.color = color; //设置自由绘颜色
     canvas.freeDrawingBrush.width = drawWidth;
@@ -764,9 +719,11 @@ class HtmlEditor extends Component {
           fabric.loadSVGFromString(content, function(objects, options) {
             var obj = fabric.util.groupSVGElements(objects, options);
             canvas.clear();
+            this.reset_zoom();
             canvas.add(obj).renderAll();
           });
         } else {
+          this.reset_zoom();
           canvas.loadFromJSON(content);
         }
         this.setState({ html: content, showPreview: 'none' });
@@ -788,29 +745,29 @@ class HtmlEditor extends Component {
     }
     return;
   };
-  updateFrame = () => {
-    let frame = window.frames['preview'];
-    if (frame) {
-      let filepath = path.dirname(this.state.filename);
-      // let $ = cheerio.load(this.state.html,{
-      //    xmlMode: true,
-      //    lowerCaseTags: false
-      // });
-      // $("head").prepend(`<base href="${filepath}/" />`);
-      let content = this.state.html;
-      content = content.replace('<head>', `<head><base href="${filepath}/" />`);
-      let doc = window.frames['preview'].document;
-      if (!doc) return;
-      try {
-        doc.open();
-        doc.write(content);
-        doc.close();
-      } catch (err) {
-        console.log(err);
-        // this.setState({filename:"about:blank"});
-      }
-    }
-  };
+  // updateFrame = () => {
+  //   let frame = window.frames['preview'];
+  //   if (frame) {
+  //     let filepath = path.dirname(this.state.filename);
+  //     // let $ = cheerio.load(this.state.html,{
+  //     //    xmlMode: true,
+  //     //    lowerCaseTags: false
+  //     // });
+  //     // $("head").prepend(`<base href="${filepath}/" />`);
+  //     let content = this.state.html;
+  //     content = content.replace('<head>', `<head><base href="${filepath}/" />`);
+  //     let doc = window.frames['preview'].document;
+  //     if (!doc) return;
+  //     try {
+  //       doc.open();
+  //       doc.write(content);
+  //       doc.close();
+  //     } catch (err) {
+  //       console.log(err);
+  //       // this.setState({filename:"about:blank"});
+  //     }
+  //   }
+  // };
   anim = () => {
     //console.log(e.target.value);
     this.setState(
@@ -894,9 +851,7 @@ class HtmlEditor extends Component {
   };
   newfile = () => {
     this.setState({
-      filename: '',
-      html:
-        '<!DOCTYPE html><html><head>\n\n<style>\n\n</style></head><body>\n\n</body></html>',
+      filename: ''
     });
     canvas.clear();
     canvas.backgroundColor = 'rgb(100,100,200)';
@@ -1080,6 +1035,13 @@ class HtmlEditor extends Component {
   change_color = () => {
     this.setState({ show_color: true });
   };
+  zoom_change=(e)=>{
+    console.log(e);
+    this.setState({zoom:parseInt(e.target.value,10)},()=>{
+      canvas.setZoom(this.state.zoom);  
+    });
+    
+  }
   selectAll = () => {
     canvas.discardActiveObject();
     var sel = new fabric.ActiveSelection(canvas.getObjects(), {
@@ -1134,15 +1096,7 @@ class HtmlEditor extends Component {
     //          xmlMode: true,
     //          lowerCaseTags: false
     //       });
-    let html = this.state.html; //$("body").html();
-    // let head=(<meta charSet="utf-8"></meta>);
-    // this.updateFrame();
     let filepath = path.dirname(this.state.filename);
-    let content = this.state.html;
-    content = content.replace(
-      '<head>',
-      `<head><base href="${this.state.filename}" >`
-    );
     let li_tools = tool_types.map((item, index) => {
       // console.log(item);
       if (index === this.state.active_tool) {
@@ -1197,7 +1151,7 @@ class HtmlEditor extends Component {
         <Browser onFileClick={this.onFileClick} />
 
         <div id="contain_edit">
-          <div style={{ height: toolbar_h, backgroundColor: '#ccc' }}>
+          <div style={{height: toolbar_h, backgroundColor: '#ccc' }}>
             <button
               style={{ margin: '10px 10px 10px 10px' }}
               onClick={this.open_click}
@@ -1245,6 +1199,8 @@ class HtmlEditor extends Component {
             <button onClick={this.delete1}>delete</button>
             <button onClick={this.zoomToFitCanvas}>fit</button>
             <button onClick={this.reset_zoom}>unfit</button>
+            <input type="range" style={{width:"100px"}} 
+           min="1" max="10" value={this.state.zoom} onChange={this.zoom_change} step="1" />
             <div>{this.state.filename}</div>
           </div>
           <div
@@ -1441,4 +1397,4 @@ class HtmlEditor extends Component {
   };
 }
 
-export default HtmlEditor;
+export default Editor;
