@@ -395,7 +395,7 @@ class HtmlEditor extends Component {
       canvas.freeDrawingBrush = new fabric[e.target.value + 'Brush'](canvas);
     }
 
-    if (canvas.freeDrawingBrush) {
+    // if (canvas.freeDrawingBrush) {
       canvas.freeDrawingBrush.color = color;
       canvas.freeDrawingBrush.width = drawWidth;
       canvas.freeDrawingBrush.shadow = new fabric.Shadow({
@@ -405,7 +405,7 @@ class HtmlEditor extends Component {
         affectStroke: true,
         color: this.state.shadow_color,
       });
-    }
+    // }
   }
   onChangeComplete=(vcolor)=>{
     // console.log(vcolor);
@@ -464,6 +464,15 @@ class HtmlEditor extends Component {
     // this.bind_events();
     this.bind_select();
     // window.addEventListener('resize', this.resize);
+     canvas.freeDrawingBrush.color = color;
+      canvas.freeDrawingBrush.width = drawWidth;
+      canvas.freeDrawingBrush.shadow = new fabric.Shadow({
+        blur: drawWidth || 0,
+        offsetX: 0,
+        offsetY: 0,
+        affectStroke: true,
+        color: this.state.shadow_color,
+      });
     if (fabric.PatternBrush) {
     this.vLinePatternBrush = new fabric.PatternBrush(canvas);
     this.vLinePatternBrush.getPatternSrc = function() {
