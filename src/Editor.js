@@ -9,6 +9,7 @@ import Browser from './Browser2';
 import MyFs from './MyFs';
 import { SketchPicker } from 'react-color'
 import PropEdit from './PropEdit';
+ var panning = false;
 const tool_types = [
   'move',
   'pen',
@@ -348,6 +349,43 @@ class HtmlEditor extends Component {
     this.cssEditor = React.createRef();
     this.htmlEditor = React.createRef();
   }
+  reset_zoom=()=> {
+    canvas.setZoom(1.0);
+    let now_center=canvas.getVpCenter();
+    canvas.relativePan({x:now_center.x-500,y:now_center.y-500});
+  };
+   zoomToFitCanvas=()=> {
+        //遍历所有对对象，获取最小坐标，最大坐标
+        var objects = canvas.getObjects();
+        if(objects.length > 0 ){
+          var rect = objects[0].getBoundingRect();
+          var minX = rect.left;
+          var minY = rect.top;
+          var maxX = rect.left + rect.width;
+          var maxY = rect.top + rect.height;
+          for(var i = 1; i<objects.length; i++){
+            rect = objects[i].getBoundingRect();
+            minX = Math.min(minX, rect.left);
+            minY= Math.min(minY, rect.top);
+            maxX = Math.max(maxX, rect.left + rect.width);
+            maxY= Math.max(maxY, rect.top + rect.height);
+          }
+        }
+ 
+        //计算平移坐标
+        var panX = (maxX - minX - canvas.width)/2 + minX;
+        var panY = (maxY - minY - canvas.height)/2 + minY;
+        //开始平移
+        canvas.absolutePan({x:panX, y:panY});
+ 
+        //计算缩放比例
+        var zoom = Math.min(canvas.width/(maxX - minX), canvas.height/(maxY - minY));
+        //计算缩放中心
+        var zoomPoint = new fabric.Point(canvas.width / 2 , canvas.height / 2);
+        //开始缩放
+        canvas.zoomToPoint(zoomPoint, zoom);
+      
+  }
   propChange=(dict)=>{
     console.log(dict);
       if(this.state.selected[0]){
@@ -414,7 +452,7 @@ class HtmlEditor extends Component {
     color=vcolor.hex;
     canvas.freeDrawingBrush.color = vcolor.hex;
   }
-  componentWillUnmount() {       
+  componentWillUnmount=()=>{       
     // window.removeEventListener('resize',this.resize);
   }
 
@@ -444,7 +482,7 @@ class HtmlEditor extends Component {
     // // this.bind_events();
     // this.bind_select();
   }
-  componentDidMount() {
+  componentDidMount=()=> {
     console.log(canvas);
     canvas = new fabric.Canvas('c', {
       backgroundColor: 'rgb(100,100,200)',
@@ -461,8 +499,8 @@ class HtmlEditor extends Component {
 
     canvas.freeDrawingBrush.color = color; //设置自由绘颜色
     canvas.freeDrawingBrush.width = drawWidth;
-    // this.bind_events();
-    this.bind_select();
+    this.last_tool=0;
+    this.bind_events(this.last_tool);
     // window.addEventListener('resize', this.resize);
      canvas.freeDrawingBrush.color = color;
       canvas.freeDrawingBrush.width = drawWidth;
@@ -555,36 +593,96 @@ class HtmlEditor extends Component {
     this.texturePatternBrush.source = img;
   }
   }
-  unbind_events = () => {
-    canvas.off('mouse:down');
-    canvas.off('mouse:move');
-    canvas.off('mouse:up');
-    canvas.off('selection:created');
+  unbind_events = (index) => {
+    if(index===0){
+      this.unbind_select();
+    }
+    else{
+      canvas.off('mouse:down');
+      canvas.off('mouse:move');
+      canvas.off('mouse:up');
+      canvas.off('selection:created');
+    }
   };
+  unbind_select=()=>{
+    // let upper=document.getElementsByClassName("upper-canvas");
+    // if(upper) {upper[0].removeEventListener("mousewheel",this.mousewheel);}
+    canvas.off('mouse:down');
+ 
+    //鼠标抬起
+    canvas.off('mouse:up');
+ 
+    //鼠标移动
+    canvas.off('mouse:move');
+    canvas.off("selection:cleared");
+
+    canvas.off("selection:updated");
+
+    canvas.off("selection:created");
+
+  }
+  mousewheel=(event)=>{
+    console.log("mousewheel");
+          var zoom = (event.deltaY > 0 ? 0.1 : -0.1) + canvas.getZoom();
+          zoom = Math.max(0.1,zoom); //最小为原来的1/10
+          zoom = Math.min(3,zoom); //最大是原来的3倍
+          var zoomPoint = new fabric.Point(event.pageX, event.pageY);
+          canvas.zoomToPoint(zoomPoint, zoom);
+
+  }
   bind_select=()=>{
-    let self=this;
+    // let upper=document.getElementsByClassName("upper-canvas");
+    // console.log(upper);
+    // if(upper){
+    //   upper[0].addEventListener("mousewheel",this.mousewheel);
+    // }
+    canvas.on('mouse:down', function (e) {
+        //按住alt键才可拖动画布
+        if(e.e.altKey) {
+          panning = true;
+          canvas.selection = false;
+        }
+    });
+ 
+    //鼠标抬起
+    canvas.on('mouse:up', function (e) {
+        panning = false;
+        canvas.selection = true;
+    });
+ 
+    //鼠标移动
+    canvas.on('mouse:move', function (e) {
+        if (panning && e && e.e) {
+            var delta = new fabric.Point(e.e.movementX, e.e.movementY);
+            canvas.relativePan(delta);
+        }
+    });
     canvas.on("selection:cleared",(options)=>{
 
-      self.setState({selected:options.selected});
+      this.setState({selected:options.selected});
       console.log("selection:cleared");
       console.log(options);
     });
 
     canvas.on("selection:updated",(options)=>{
 
-      self.setState({selected:options.selected});
+      this.setState({selected:options.selected});
       console.log("selection:updated");
       console.log(options);
     });
 
     canvas.on("selection:created",(options)=>{
 
-      self.setState({selected:options.selected});
+      this.setState({selected:options.selected});
       console.log("selection:created");
       console.log(options);
     });
   }
-  bind_events = () => {
+  bind_events = (index) => {
+    if (index===0){
+      this.bind_select();
+    }
+    else{
     //绑定画板事件
     canvas.on('mouse:down', function(options) {
       var xy = transformMouse(options.e.offsetX, options.e.offsetY);
@@ -626,8 +724,9 @@ class HtmlEditor extends Component {
       }
       canvas.discardActiveObject(); //清楚选中框
     });
+    }
   };
-  componentWillUnmount() {}
+  componentWillUnmount=()=>{}
   handleDragStart = () => {
     this.setState({
       dragging: true,
@@ -818,27 +917,32 @@ class HtmlEditor extends Component {
     });
   };
   click_tool = index => {
+    if(index===this.last_tool) return;
     this.setState({ active_tool: index });
-
     drawType = tool_types[index]; //jQuery(this).attr("data-type");
     console.log(index);
     console.log(drawType);
     canvas.isDrawingMode = false;
-    if (drawType === 'move') {
-      canvas.selection = true;
-      canvas.skipTargetFind = false;
-      canvas.selectable = true;
-      this.unbind_events();
-      this.bind_select();
-      return;
-    } else {
-      this.bind_events();
-    }
     if (textbox) {
       //退出文本编辑状态
       textbox.exitEditing();
       textbox = null;
     }
+    if (drawType === 'move') {
+      canvas.selection = true;
+      canvas.skipTargetFind = false;
+      canvas.selectable = true;
+      this.unbind_events(this.last_tool);
+      this.bind_events(index);
+      this.last_tool=index;
+      return;
+    } else {
+
+      this.unbind_events(this.last_tool);
+      this.bind_events(index);
+      this.last_tool=index;
+    }
+    
     if (drawType == 'pen') {
       canvas.isDrawingMode = true;
     } else if (drawType == 'remove') {
@@ -1011,7 +1115,7 @@ superScript=()=> {
   active.setSuperscript();
   canvas.requestRenderAll();
 }
-delete=()=>{
+delete1=()=>{
   var active = canvas.getActiveObject();
   console.log(active);
   if(!active) return;
@@ -1032,7 +1136,7 @@ subScript=()=> {
   active.setSubscript();
   canvas.requestRenderAll();
 }
-  render() {
+  render=()=> {
     // console.log(this.state);
     // let $ = cheerio.load(this.state.html,{
     //          xmlMode: true,
@@ -1146,7 +1250,9 @@ subScript=()=> {
             <button onClick={this.superScript}>上标</button>
             <button onClick={this.subScript}>下标</button>
             <button onClick={this.removeScript}>正常</button>
-            <button onClick={this.delete}>delete</button>
+            <button onClick={this.delete1}>delete</button>
+            <button onClick={this.zoomToFitCanvas}>fit</button>
+            <button onClick={this.reset_zoom}>unfit</button>
             <div>{this.state.filename}</div>
           </div>
           <div
