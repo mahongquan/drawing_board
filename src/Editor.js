@@ -28,12 +28,14 @@ var mouseFrom = {},
   drawType = null,
   canvasObjectIndex = 0,
   textbox = null;
-var drawWidth = 3; //笔触宽度
-var color = 'green'; //画笔颜色
+var drawWidth = 10; //笔触宽度
+var color = '#ffff00'; //画笔颜色
 var drawingObject = null; //当前绘制对象
 var moveCount = 1; //绘制移动计数器
 var doDrawing = false; // 绘制状态
 let canvas;
+let _clipboard;
+
 //坐标转换
 function transformMouse(mouseX, mouseY) {
   return { x: mouseX / window.zoom, y: mouseY / window.zoom };
@@ -187,7 +189,7 @@ function drawing() {
         left: mouseFrom.x - 60,
         top: mouseFrom.y - 20,
         width: 150,
-        fontSize: 18,
+        fontSize: 28,
         borderColor: '#2c2c2c',
         fill: color,
         hasControls: false,
@@ -321,9 +323,14 @@ class HtmlEditor extends Component {
       this.setState({ show_about: true });
     });
     this.state = {
+      mode:"Pencil",
+      shadow_color:"#00FF00",
+      shadow_width:10,
+      shadow_offset:4,
       show_about: false,
       show_color:false,
       show_prop:"none",
+      canvasSize: { width: '1000px', height: '1000px' },
       previewSize: { width: '220px', height: '300px' },
       css: css,
       // head:`<meta charset="utf-8"/>`,
@@ -348,6 +355,58 @@ class HtmlEditor extends Component {
         canvas.renderAll();
       }
   }
+  color_change=(e)=>{
+    console.log(e);
+    this.setState({color:e.target.value});
+    color=e.target.value;
+    canvas.freeDrawingBrush.color=e.target.value;
+  }
+  shadow_color_change=(e)=>{
+    this.setState({shadow_color:e.target.value})
+    canvas.freeDrawingBrush.shadow.color=e.target.value;
+  }
+  shadow_width_change=(e)=>{
+    this.setState({shadow_width:parseInt(e.target.value,10)})
+    canvas.freeDrawingBrush.shadow.blur = parseInt(e.target.value, 10) || 0;
+  }
+  shadow_offset_change=(e)=>{
+    this.setState({shadow_offset:parseInt(e.target.value,10)})
+    canvas.freeDrawingBrush.shadow.offsetX = parseInt(e.target.value, 10) || 0;
+    canvas.freeDrawingBrush.shadow.offsetY = parseInt(e.target.value, 10) || 0;
+  }
+  mode_change=(e)=>{
+    this.setState({mode:e.target.value});
+    if (e.target.value === 'hline') {
+      canvas.freeDrawingBrush = this.vLinePatternBrush;
+    }
+    else if (e.target.value === 'vline') {
+      canvas.freeDrawingBrush = this.hLinePatternBrush;
+    }
+    else if (e.target.value=== 'square') {
+      canvas.freeDrawingBrush = this.squarePatternBrush;
+    }
+    else if (e.target.value === 'diamond') {
+      canvas.freeDrawingBrush = this.diamondPatternBrush;
+    }
+    else if (e.target.value === 'texture') {
+      canvas.freeDrawingBrush = this.texturePatternBrush;
+    }
+    else {
+      canvas.freeDrawingBrush = new fabric[e.target.value + 'Brush'](canvas);
+    }
+
+    if (canvas.freeDrawingBrush) {
+      canvas.freeDrawingBrush.color = color;
+      canvas.freeDrawingBrush.width = drawWidth;
+      canvas.freeDrawingBrush.shadow = new fabric.Shadow({
+        blur: drawWidth || 0,
+        offsetX: 0,
+        offsetY: 0,
+        affectStroke: true,
+        color: this.state.shadow_color,
+      });
+    }
+  }
   onChangeComplete=(vcolor)=>{
     // console.log(vcolor);
 
@@ -355,15 +414,38 @@ class HtmlEditor extends Component {
     color=vcolor.hex;
     canvas.freeDrawingBrush.color = vcolor.hex;
   }
-  componentDidMount() {
-    // this.divPreview = document.getElementById('preview');
-    // this.preview();
-    // setTimeout(this.updateFrame,2000);
-    // this.updateFrame();
-    // const canvas = new fabric.Canvas('c', {
+  componentWillUnmount() {       
+    // window.removeEventListener('resize',this.resize);
+  }
+
+  resize=(e)=>{
+    this.setState({canvasSize:{width:window.innerWidth,height:window.innerHeight}},()=>{
+      canvas.set({width:this.refs.canvas.clientWidth
+        ,height:this.refs.canvas.clientHeight});
+
+    })
+    // console.log("resize");
+    // canvas.renderAll();
+    // canvas.clear();
+    // canvas = new fabric.Canvas('c', {
+    //   backgroundColor: 'rgb(100,100,200)',
     //   width: this.refs.canvas.clientWidth,
-    //   height: this.refs.canvas.clientHeight
+    //   height: this.refs.canvas.clientHeight,
+    //   isDrawingMode: false,
+    //   skipTargetFind: false,
+    //   selectable: true,
+    //   selection: true,
     // });
+    // window.canvas = canvas;
+    // window.zoom = window.zoom ? window.zoom : 1;
+
+    // canvas.freeDrawingBrush.color = color; //设置自由绘颜色
+    // canvas.freeDrawingBrush.width = drawWidth;
+    // // this.bind_events();
+    // this.bind_select();
+  }
+  componentDidMount() {
+    console.log(canvas);
     canvas = new fabric.Canvas('c', {
       backgroundColor: 'rgb(100,100,200)',
       width: this.refs.canvas.clientWidth,
@@ -381,6 +463,88 @@ class HtmlEditor extends Component {
     canvas.freeDrawingBrush.width = drawWidth;
     // this.bind_events();
     this.bind_select();
+    // window.addEventListener('resize', this.resize);
+    if (fabric.PatternBrush) {
+    this.vLinePatternBrush = new fabric.PatternBrush(canvas);
+    this.vLinePatternBrush.getPatternSrc = function() {
+
+      var patternCanvas = fabric.document.createElement('canvas');
+      patternCanvas.width = patternCanvas.height = 10;
+      var ctx = patternCanvas.getContext('2d');
+
+      ctx.strokeStyle = this.color;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(0, 5);
+      ctx.lineTo(10, 5);
+      ctx.closePath();
+      ctx.stroke();
+
+      return patternCanvas;
+    };
+
+    this.hLinePatternBrush = new fabric.PatternBrush(canvas);
+    this.hLinePatternBrush.getPatternSrc = function() {
+
+      var patternCanvas = fabric.document.createElement('canvas');
+      patternCanvas.width = patternCanvas.height = 10;
+      var ctx = patternCanvas.getContext('2d');
+
+      ctx.strokeStyle = this.color;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(5, 0);
+      ctx.lineTo(5, 10);
+      ctx.closePath();
+      ctx.stroke();
+
+      return patternCanvas;
+    };
+
+    this.squarePatternBrush = new fabric.PatternBrush(canvas);
+    this.squarePatternBrush.getPatternSrc = function() {
+
+      var squareWidth = 10, squareDistance = 2;
+
+      var patternCanvas = fabric.document.createElement('canvas');
+      patternCanvas.width = patternCanvas.height = squareWidth + squareDistance;
+      var ctx = patternCanvas.getContext('2d');
+
+      ctx.fillStyle = this.color;
+      ctx.fillRect(0, 0, squareWidth, squareWidth);
+
+      return patternCanvas;
+    };
+
+    this.diamondPatternBrush = new fabric.PatternBrush(canvas);
+    this.diamondPatternBrush.getPatternSrc = function() {
+
+      var squareWidth = 10, squareDistance = 5;
+      var patternCanvas = fabric.document.createElement('canvas');
+      var rect = new fabric.Rect({
+        width: squareWidth,
+        height: squareWidth,
+        angle: 45,
+        fill: this.color
+      });
+
+      var canvasWidth = rect.getBoundingRect().width;
+
+      patternCanvas.width = patternCanvas.height = canvasWidth + squareDistance;
+      rect.set({ left: canvasWidth / 2, top: canvasWidth / 2 });
+
+      var ctx = patternCanvas.getContext('2d');
+      rect.render(ctx);
+
+      return patternCanvas;
+    };
+
+    var img = new Image();
+    img.src = './honey_im_subtle.png';
+
+    this.texturePatternBrush = new fabric.PatternBrush(canvas);
+    this.texturePatternBrush.source = img;
+  }
   }
   unbind_events = () => {
     canvas.off('mouse:down');
@@ -748,9 +912,117 @@ class HtmlEditor extends Component {
     //   onChange: canvas.renderAll.bind(canvas)
     // });
   };
+  group=()=> {
+        if (!canvas.getActiveObject()) {
+          return;
+        }
+        if (canvas.getActiveObject().type !== 'activeSelection') {
+          return;
+        }
+        canvas.getActiveObject().toGroup();
+        canvas.requestRenderAll();
+      }
+
+      ungroup=()=> {
+        if (!canvas.getActiveObject()) {
+          return;
+        }
+        if (canvas.getActiveObject().type !== 'group') {
+          return;
+        }
+        canvas.getActiveObject().toActiveSelection();
+        canvas.requestRenderAll();
+      }
+
+Copy=()=> {
+  // clone what are you copying since you
+  // may want copy and paste on different moment.
+  // and you do not want the changes happened
+  // later to reflect on the copy.
+  canvas.getActiveObject().clone(function(cloned) {
+    _clipboard = cloned;
+  });
+}
+
+Paste=()=> {
+  // clone again, so you can do multiple copies.
+  if(!_clipboard) return;
+  _clipboard.clone(function(clonedObj) {
+    canvas.discardActiveObject();
+    clonedObj.set({
+      left: clonedObj.left + 10,
+      top: clonedObj.top + 10,
+      evented: true,
+    });
+    if (clonedObj.type === 'activeSelection') {
+      // active selection needs a reference to the canvas.
+      clonedObj.canvas = canvas;
+      clonedObj.forEachObject(function(obj) {
+        canvas.add(obj);
+      });
+      // this should solve the unselectability
+      clonedObj.setCoords();
+    } else {
+      canvas.add(clonedObj);
+    }
+    _clipboard.top += 10;
+    _clipboard.left += 10;
+    canvas.setActiveObject(clonedObj);
+    canvas.requestRenderAll();
+  });
+}
   change_color=()=>{
     this.setState({show_color:true});
   }
+  selectAll = ()=> {
+        canvas.discardActiveObject();
+        var sel = new fabric.ActiveSelection(canvas.getObjects(), {
+          canvas: canvas,
+        });
+        canvas.setActiveObject(sel);
+        canvas.requestRenderAll();
+      }
+      selectNone = ()=> {
+        canvas.discardActiveObject();
+        canvas.requestRenderAll();
+      }
+ removeScript=()=> {
+  var active = canvas.getActiveObject();
+  if (!active) return;
+  active.setSelectionStyles({
+    fontSize: undefined,
+    deltaY: undefined,
+  });
+  canvas.requestRenderAll();
+}
+
+superScript=()=> {
+  var active = canvas.getActiveObject();
+  if (!active) return;
+  active.setSuperscript();
+  canvas.requestRenderAll();
+}
+delete=()=>{
+  var active = canvas.getActiveObject();
+  console.log(active);
+  if(!active) return;
+  if (active.type === 'activeSelection') {
+      active.forEachObject(function(obj) {
+        canvas.remove(obj);
+      });
+  }
+  else{
+    canvas.remove(active);
+  }
+  canvas.discardActiveObject();
+  // canvas.requestRenderAll();
+}
+subScript=()=> {
+  var active = canvas.getActiveObject();
+  if (!active) return;
+  active.setSubscript();
+  canvas.requestRenderAll();
+}
   render() {
     // console.log(this.state);
     // let $ = cheerio.load(this.state.html,{
@@ -855,9 +1127,17 @@ class HtmlEditor extends Component {
             >
               New
             </button>
-            <button onClick={this.anim}>anim</button>
+            <button onClick={this.group}>group</button>
+            <button onClick={this.ungroup}>un group</button>
             
-            <button onClick={this.anim_canvas}>test anim</button>
+            <button onClick={this.Copy}>copy</button>
+            <button onClick={this.Paste}>Paste</button>
+            <button onClick={this.selectAll}>全选</button>
+            <button onClick={this.selectNone}>取消选择</button>
+            <button onClick={this.superScript}>上标</button>
+            <button onClick={this.subScript}>下标</button>
+            <button onClick={this.removeScript}>正常</button>
+            <button onClick={this.delete}>delete</button>
             <div>{this.state.filename}</div>
           </div>
           <div
@@ -877,8 +1157,7 @@ class HtmlEditor extends Component {
               id="canvasDiv"
               className="canvasDiv"
               style={{
-                marginLeft: '60px',
-                width: '95%',
+                width: '100%',
                 height: 'calc(100vh - ${toolbar_h})',
                 backgroundColor:"#070",
               }}
@@ -886,7 +1165,9 @@ class HtmlEditor extends Component {
               <canvas
                 id="c"
                 ref="canvas"
-                style={{ width: '100%', height: '100%' }}
+                style={{ margin:"30px 30px 30px 30px"
+                  ,width: this.state.canvasSize.width
+                  , height: this.state.canvasSize.height}}
               >
                 请使用支持HTML5的浏览器
               </canvas>
@@ -902,15 +1183,44 @@ class HtmlEditor extends Component {
                   this.setState({showPreview:"none"}); 
                 }
              }}>pen</button>
-           <div style={{margin:"10 10 10 10",with:"200px",height:"330px",
+           <div style={{margin:"10 10 10 10",with:"250px",height:"330px",
               flexDirection:"column",
               display:this.state.showPreview}}>
-             <div><label>pen width</label>
-            <input style={{width:"50px"}}
-              value={this.state.pen_width}
-              onChange={this.pen_width_change}
-            /></div>
-             <SketchPicker color={this.state.color} onChangeComplete={this.onChangeComplete} />
+
+             <div>
+  <div id="drawing-mode-options">
+    <label>Mode:</label>
+    <select id="drawing-mode-selector" value={this.state.mode}
+              onChange={this.mode_change}>
+      <option>Pencil</option>
+      <option>Circle</option>
+      <option>Spray</option>
+      <option>Pattern</option>
+      <option>hline</option>
+      <option>vline</option>
+      <option>square</option>
+      <option>diamond</option>
+      <option>texture</option>
+    </select><br />
+    <label >Line width:</label>
+    <input value={this.state.pen_width}
+              onChange={this.pen_width_change} id="drawing-line-width" /><br />
+
+    <label >Line color:</label>
+    <input type="color" value={this.state.color} onChange={this.color_change} id="drawing-color" /><br />
+
+    <label >Shadow color:</label>
+    <input type="color" value={this.state.shadow_color}  onChange={this.shadow_color_change} id="drawing-shadow-color" /><br/>
+
+    <label >Shadow width:</label>
+    <input value={this.state.shadow_width}
+              onChange={this.shadow_width_change} id="drawing-shadow-width" /><br />
+
+    <label >Shadow offset:</label>
+    <input value={this.state.shadow_offset}
+              onChange={this.shadow_offset_change} id="drawing-shadow-offset" /><br />
+  </div>
+</div>
            </div>
           </div>
           <div id="contain_prop">

@@ -10,13 +10,19 @@ let path_obj = path.parse(app_root);
 app_root = path_obj.root;
 console.log(app_root);
 function myPathObj(p) {
-  var stat = fs.statSync(p);
+  let stat=null;
+  try {
+        stat = fs.statSync(p);
+  } catch (err) {
+        console.log(err);
+        // this.setState({filename:"about:blank"});
+  }
   return {
     path: path.relative(app_root, p),
     name: path.basename(p),
-    time: stat.mtimeMs,
-    isdir: stat.isDirectory(),
-    size: stat.size,
+    time: stat && stat.mtimeMs,
+    isdir: stat && stat.isDirectory(),
+    size: stat && stat.size,
   };
 }
 //console.log(myPathObj("run.bat"))
