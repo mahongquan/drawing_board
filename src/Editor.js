@@ -7,9 +7,9 @@ import DlgColor from './DlgColor';
 import data from './Data';
 import Browser from './Browser2';
 import MyFs from './MyFs';
-import { SketchPicker } from 'react-color'
+import { SketchPicker } from 'react-color';
 import PropEdit from './PropEdit';
- var panning = false;
+var panning = false;
 const tool_types = [
   'move',
   'pen',
@@ -324,13 +324,13 @@ class HtmlEditor extends Component {
       this.setState({ show_about: true });
     });
     this.state = {
-      mode:"Pencil",
-      shadow_color:"#00FF00",
-      shadow_width:10,
-      shadow_offset:4,
+      mode: 'Pencil',
+      shadow_color: '#00FF00',
+      shadow_width: 10,
+      shadow_offset: 4,
       show_about: false,
-      show_color:false,
-      show_prop:"none",
+      show_color: false,
+      show_prop: 'none',
       canvasSize: { width: '1000px', height: '1000px' },
       previewSize: { width: '220px', height: '300px' },
       css: css,
@@ -343,125 +343,126 @@ class HtmlEditor extends Component {
       selectValue: '',
       active_tool: 0,
       pen_width: 3,
-      color:color,
-      selected:null,
+      color: color,
+      selected: null,
     };
     this.cssEditor = React.createRef();
     this.htmlEditor = React.createRef();
   }
-  reset_zoom=()=> {
+  reset_zoom = () => {
     canvas.setZoom(1.0);
-    let now_center=canvas.getVpCenter();
-    canvas.relativePan({x:now_center.x-500,y:now_center.y-500});
+    let now_center = canvas.getVpCenter();
+    canvas.relativePan({ x: now_center.x - 500, y: now_center.y - 500 });
   };
-   zoomToFitCanvas=()=> {
-        //遍历所有对对象，获取最小坐标，最大坐标
-        var objects = canvas.getObjects();
-        if(objects.length > 0 ){
-          var rect = objects[0].getBoundingRect();
-          var minX = rect.left;
-          var minY = rect.top;
-          var maxX = rect.left + rect.width;
-          var maxY = rect.top + rect.height;
-          for(var i = 1; i<objects.length; i++){
-            rect = objects[i].getBoundingRect();
-            minX = Math.min(minX, rect.left);
-            minY= Math.min(minY, rect.top);
-            maxX = Math.max(maxX, rect.left + rect.width);
-            maxY= Math.max(maxY, rect.top + rect.height);
-          }
-        }
- 
-        //计算平移坐标
-        var panX = (maxX - minX - canvas.width)/2 + minX;
-        var panY = (maxY - minY - canvas.height)/2 + minY;
-        //开始平移
-        canvas.absolutePan({x:panX, y:panY});
- 
-        //计算缩放比例
-        var zoom = Math.min(canvas.width/(maxX - minX), canvas.height/(maxY - minY));
-        //计算缩放中心
-        var zoomPoint = new fabric.Point(canvas.width / 2 , canvas.height / 2);
-        //开始缩放
-        canvas.zoomToPoint(zoomPoint, zoom);
-      
-  }
-  propChange=(dict)=>{
-    console.log(dict);
-      if(this.state.selected[0]){
-        this.state.selected[0].set(dict);
-        canvas.renderAll();
+  zoomToFitCanvas = () => {
+    //遍历所有对对象，获取最小坐标，最大坐标
+    var objects = canvas.getObjects();
+    if (objects.length > 0) {
+      var rect = objects[0].getBoundingRect();
+      var minX = rect.left;
+      var minY = rect.top;
+      var maxX = rect.left + rect.width;
+      var maxY = rect.top + rect.height;
+      for (var i = 1; i < objects.length; i++) {
+        rect = objects[i].getBoundingRect();
+        minX = Math.min(minX, rect.left);
+        minY = Math.min(minY, rect.top);
+        maxX = Math.max(maxX, rect.left + rect.width);
+        maxY = Math.max(maxY, rect.top + rect.height);
       }
-  }
-  color_change=(e)=>{
+    }
+
+    //计算平移坐标
+    var panX = (maxX - minX - canvas.width) / 2 + minX;
+    var panY = (maxY - minY - canvas.height) / 2 + minY;
+    //开始平移
+    canvas.absolutePan({ x: panX, y: panY });
+
+    //计算缩放比例
+    var zoom = Math.min(
+      canvas.width / (maxX - minX),
+      canvas.height / (maxY - minY)
+    );
+    //计算缩放中心
+    var zoomPoint = new fabric.Point(canvas.width / 2, canvas.height / 2);
+    //开始缩放
+    canvas.zoomToPoint(zoomPoint, zoom);
+  };
+  propChange = dict => {
+    console.log(dict);
+    if (this.state.selected[0]) {
+      this.state.selected[0].set(dict);
+      canvas.renderAll();
+    }
+  };
+  color_change = e => {
     console.log(e);
-    this.setState({color:e.target.value});
-    color=e.target.value;
-    canvas.freeDrawingBrush.color=e.target.value;
-  }
-  shadow_color_change=(e)=>{
-    this.setState({shadow_color:e.target.value})
-    canvas.freeDrawingBrush.shadow.color=e.target.value;
-  }
-  shadow_width_change=(e)=>{
-    this.setState({shadow_width:parseInt(e.target.value,10)})
+    this.setState({ color: e.target.value });
+    color = e.target.value;
+    canvas.freeDrawingBrush.color = e.target.value;
+  };
+  shadow_color_change = e => {
+    this.setState({ shadow_color: e.target.value });
+    canvas.freeDrawingBrush.shadow.color = e.target.value;
+  };
+  shadow_width_change = e => {
+    this.setState({ shadow_width: parseInt(e.target.value, 10) });
     canvas.freeDrawingBrush.shadow.blur = parseInt(e.target.value, 10) || 0;
-  }
-  shadow_offset_change=(e)=>{
-    this.setState({shadow_offset:parseInt(e.target.value,10)})
+  };
+  shadow_offset_change = e => {
+    this.setState({ shadow_offset: parseInt(e.target.value, 10) });
     canvas.freeDrawingBrush.shadow.offsetX = parseInt(e.target.value, 10) || 0;
     canvas.freeDrawingBrush.shadow.offsetY = parseInt(e.target.value, 10) || 0;
-  }
-  mode_change=(e)=>{
-    this.setState({mode:e.target.value});
+  };
+  mode_change = e => {
+    this.setState({ mode: e.target.value });
     if (e.target.value === 'hline') {
       canvas.freeDrawingBrush = this.vLinePatternBrush;
-    }
-    else if (e.target.value === 'vline') {
+    } else if (e.target.value === 'vline') {
       canvas.freeDrawingBrush = this.hLinePatternBrush;
-    }
-    else if (e.target.value=== 'square') {
+    } else if (e.target.value === 'square') {
       canvas.freeDrawingBrush = this.squarePatternBrush;
-    }
-    else if (e.target.value === 'diamond') {
+    } else if (e.target.value === 'diamond') {
       canvas.freeDrawingBrush = this.diamondPatternBrush;
-    }
-    else if (e.target.value === 'texture') {
+    } else if (e.target.value === 'texture') {
       canvas.freeDrawingBrush = this.texturePatternBrush;
-    }
-    else {
+    } else {
       canvas.freeDrawingBrush = new fabric[e.target.value + 'Brush'](canvas);
     }
 
     // if (canvas.freeDrawingBrush) {
-      canvas.freeDrawingBrush.color = color;
-      canvas.freeDrawingBrush.width = drawWidth;
-      canvas.freeDrawingBrush.shadow = new fabric.Shadow({
-        blur: drawWidth || 0,
-        offsetX: 0,
-        offsetY: 0,
-        affectStroke: true,
-        color: this.state.shadow_color,
-      });
+    canvas.freeDrawingBrush.color = color;
+    canvas.freeDrawingBrush.width = drawWidth;
+    canvas.freeDrawingBrush.shadow = new fabric.Shadow({
+      blur: drawWidth || 0,
+      offsetX: 0,
+      offsetY: 0,
+      affectStroke: true,
+      color: this.state.shadow_color,
+    });
     // }
-  }
-  onChangeComplete=(vcolor)=>{
+  };
+  onChangeComplete = vcolor => {
     // console.log(vcolor);
 
-    this.setState({color:vcolor.hex});
-    color=vcolor.hex;
+    this.setState({ color: vcolor.hex });
+    color = vcolor.hex;
     canvas.freeDrawingBrush.color = vcolor.hex;
-  }
-  componentWillUnmount=()=>{       
+  };
+  componentWillUnmount = () => {
     // window.removeEventListener('resize',this.resize);
-  }
+  };
 
-  resize=(e)=>{
-    this.setState({canvasSize:{width:window.innerWidth,height:window.innerHeight}},()=>{
-      canvas.set({width:this.refs.canvas.clientWidth
-        ,height:this.refs.canvas.clientHeight});
-
-    })
+  resize = e => {
+    this.setState(
+      { canvasSize: { width: window.innerWidth, height: window.innerHeight } },
+      () => {
+        canvas.set({
+          width: this.refs.canvas.clientWidth,
+          height: this.refs.canvas.clientHeight,
+        });
+      }
+    );
     // console.log("resize");
     // canvas.renderAll();
     // canvas.clear();
@@ -481,8 +482,8 @@ class HtmlEditor extends Component {
     // canvas.freeDrawingBrush.width = drawWidth;
     // // this.bind_events();
     // this.bind_select();
-  }
-  componentDidMount=()=> {
+  };
+  componentDidMount = () => {
     console.log(canvas);
     canvas = new fabric.Canvas('c', {
       backgroundColor: 'rgb(100,100,200)',
@@ -499,234 +500,227 @@ class HtmlEditor extends Component {
 
     canvas.freeDrawingBrush.color = color; //设置自由绘颜色
     canvas.freeDrawingBrush.width = drawWidth;
-    this.last_tool=0;
+    this.last_tool = 0;
     this.bind_events(this.last_tool);
     // window.addEventListener('resize', this.resize);
-     canvas.freeDrawingBrush.color = color;
-      canvas.freeDrawingBrush.width = drawWidth;
-      canvas.freeDrawingBrush.shadow = new fabric.Shadow({
-        blur: drawWidth || 0,
-        offsetX: 0,
-        offsetY: 0,
-        affectStroke: true,
-        color: this.state.shadow_color,
-      });
+    canvas.freeDrawingBrush.color = color;
+    canvas.freeDrawingBrush.width = drawWidth;
+    canvas.freeDrawingBrush.shadow = new fabric.Shadow({
+      blur: drawWidth || 0,
+      offsetX: 0,
+      offsetY: 0,
+      affectStroke: true,
+      color: this.state.shadow_color,
+    });
     if (fabric.PatternBrush) {
-    this.vLinePatternBrush = new fabric.PatternBrush(canvas);
-    this.vLinePatternBrush.getPatternSrc = function() {
+      this.vLinePatternBrush = new fabric.PatternBrush(canvas);
+      this.vLinePatternBrush.getPatternSrc = function() {
+        var patternCanvas = fabric.document.createElement('canvas');
+        patternCanvas.width = patternCanvas.height = 10;
+        var ctx = patternCanvas.getContext('2d');
 
-      var patternCanvas = fabric.document.createElement('canvas');
-      patternCanvas.width = patternCanvas.height = 10;
-      var ctx = patternCanvas.getContext('2d');
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(0, 5);
+        ctx.lineTo(10, 5);
+        ctx.closePath();
+        ctx.stroke();
 
-      ctx.strokeStyle = this.color;
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.moveTo(0, 5);
-      ctx.lineTo(10, 5);
-      ctx.closePath();
-      ctx.stroke();
+        return patternCanvas;
+      };
 
-      return patternCanvas;
-    };
+      this.hLinePatternBrush = new fabric.PatternBrush(canvas);
+      this.hLinePatternBrush.getPatternSrc = function() {
+        var patternCanvas = fabric.document.createElement('canvas');
+        patternCanvas.width = patternCanvas.height = 10;
+        var ctx = patternCanvas.getContext('2d');
 
-    this.hLinePatternBrush = new fabric.PatternBrush(canvas);
-    this.hLinePatternBrush.getPatternSrc = function() {
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(5, 0);
+        ctx.lineTo(5, 10);
+        ctx.closePath();
+        ctx.stroke();
 
-      var patternCanvas = fabric.document.createElement('canvas');
-      patternCanvas.width = patternCanvas.height = 10;
-      var ctx = patternCanvas.getContext('2d');
+        return patternCanvas;
+      };
 
-      ctx.strokeStyle = this.color;
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.moveTo(5, 0);
-      ctx.lineTo(5, 10);
-      ctx.closePath();
-      ctx.stroke();
+      this.squarePatternBrush = new fabric.PatternBrush(canvas);
+      this.squarePatternBrush.getPatternSrc = function() {
+        var squareWidth = 10,
+          squareDistance = 2;
 
-      return patternCanvas;
-    };
+        var patternCanvas = fabric.document.createElement('canvas');
+        patternCanvas.width = patternCanvas.height =
+          squareWidth + squareDistance;
+        var ctx = patternCanvas.getContext('2d');
 
-    this.squarePatternBrush = new fabric.PatternBrush(canvas);
-    this.squarePatternBrush.getPatternSrc = function() {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(0, 0, squareWidth, squareWidth);
 
-      var squareWidth = 10, squareDistance = 2;
+        return patternCanvas;
+      };
 
-      var patternCanvas = fabric.document.createElement('canvas');
-      patternCanvas.width = patternCanvas.height = squareWidth + squareDistance;
-      var ctx = patternCanvas.getContext('2d');
+      this.diamondPatternBrush = new fabric.PatternBrush(canvas);
+      this.diamondPatternBrush.getPatternSrc = function() {
+        var squareWidth = 10,
+          squareDistance = 5;
+        var patternCanvas = fabric.document.createElement('canvas');
+        var rect = new fabric.Rect({
+          width: squareWidth,
+          height: squareWidth,
+          angle: 45,
+          fill: this.color,
+        });
 
-      ctx.fillStyle = this.color;
-      ctx.fillRect(0, 0, squareWidth, squareWidth);
+        var canvasWidth = rect.getBoundingRect().width;
 
-      return patternCanvas;
-    };
+        patternCanvas.width = patternCanvas.height =
+          canvasWidth + squareDistance;
+        rect.set({ left: canvasWidth / 2, top: canvasWidth / 2 });
 
-    this.diamondPatternBrush = new fabric.PatternBrush(canvas);
-    this.diamondPatternBrush.getPatternSrc = function() {
+        var ctx = patternCanvas.getContext('2d');
+        rect.render(ctx);
 
-      var squareWidth = 10, squareDistance = 5;
-      var patternCanvas = fabric.document.createElement('canvas');
-      var rect = new fabric.Rect({
-        width: squareWidth,
-        height: squareWidth,
-        angle: 45,
-        fill: this.color
-      });
+        return patternCanvas;
+      };
 
-      var canvasWidth = rect.getBoundingRect().width;
+      var img = new Image();
+      img.src = './honey_im_subtle.png';
 
-      patternCanvas.width = patternCanvas.height = canvasWidth + squareDistance;
-      rect.set({ left: canvasWidth / 2, top: canvasWidth / 2 });
-
-      var ctx = patternCanvas.getContext('2d');
-      rect.render(ctx);
-
-      return patternCanvas;
-    };
-
-    var img = new Image();
-    img.src = './honey_im_subtle.png';
-
-    this.texturePatternBrush = new fabric.PatternBrush(canvas);
-    this.texturePatternBrush.source = img;
-  }
-  }
-  unbind_events = (index) => {
-    if(index===0){
-      this.unbind_select();
+      this.texturePatternBrush = new fabric.PatternBrush(canvas);
+      this.texturePatternBrush.source = img;
     }
-    else{
+  };
+  unbind_events = index => {
+    if (index === 0) {
+      this.unbind_select();
+    } else {
       canvas.off('mouse:down');
       canvas.off('mouse:move');
       canvas.off('mouse:up');
       canvas.off('selection:created');
     }
   };
-  unbind_select=()=>{
+  unbind_select = () => {
     // let upper=document.getElementsByClassName("upper-canvas");
     // if(upper) {upper[0].removeEventListener("mousewheel",this.mousewheel);}
     canvas.off('mouse:down');
- 
+
     //鼠标抬起
     canvas.off('mouse:up');
- 
+
     //鼠标移动
     canvas.off('mouse:move');
-    canvas.off("selection:cleared");
+    canvas.off('selection:cleared');
 
-    canvas.off("selection:updated");
+    canvas.off('selection:updated');
 
-    canvas.off("selection:created");
-
-  }
-  mousewheel=(event)=>{
-    console.log("mousewheel");
-          var zoom = (event.deltaY > 0 ? 0.1 : -0.1) + canvas.getZoom();
-          zoom = Math.max(0.1,zoom); //最小为原来的1/10
-          zoom = Math.min(3,zoom); //最大是原来的3倍
-          var zoomPoint = new fabric.Point(event.pageX, event.pageY);
-          canvas.zoomToPoint(zoomPoint, zoom);
-
-  }
-  bind_select=()=>{
+    canvas.off('selection:created');
+  };
+  mousewheel = event => {
+    console.log('mousewheel');
+    var zoom = (event.deltaY > 0 ? 0.1 : -0.1) + canvas.getZoom();
+    zoom = Math.max(0.1, zoom); //最小为原来的1/10
+    zoom = Math.min(3, zoom); //最大是原来的3倍
+    var zoomPoint = new fabric.Point(event.pageX, event.pageY);
+    canvas.zoomToPoint(zoomPoint, zoom);
+  };
+  bind_select = () => {
     // let upper=document.getElementsByClassName("upper-canvas");
     // console.log(upper);
     // if(upper){
     //   upper[0].addEventListener("mousewheel",this.mousewheel);
     // }
-    canvas.on('mouse:down', function (e) {
-        //按住alt键才可拖动画布
-        if(e.e.altKey) {
-          panning = true;
-          canvas.selection = false;
-        }
+    canvas.on('mouse:down', function(e) {
+      //按住alt键才可拖动画布
+      if (e.e.altKey) {
+        panning = true;
+        canvas.selection = false;
+      }
     });
- 
+
     //鼠标抬起
-    canvas.on('mouse:up', function (e) {
-        panning = false;
-        canvas.selection = true;
+    canvas.on('mouse:up', function(e) {
+      panning = false;
+      canvas.selection = true;
     });
- 
+
     //鼠标移动
-    canvas.on('mouse:move', function (e) {
-        if (panning && e && e.e) {
-            var delta = new fabric.Point(e.e.movementX, e.e.movementY);
-            canvas.relativePan(delta);
-        }
+    canvas.on('mouse:move', function(e) {
+      if (panning && e && e.e) {
+        var delta = new fabric.Point(e.e.movementX, e.e.movementY);
+        canvas.relativePan(delta);
+      }
     });
-    canvas.on("selection:cleared",(options)=>{
-
-      this.setState({selected:options.selected});
-      console.log("selection:cleared");
+    canvas.on('selection:cleared', options => {
+      this.setState({ selected: options.selected });
+      console.log('selection:cleared');
       console.log(options);
     });
 
-    canvas.on("selection:updated",(options)=>{
-
-      this.setState({selected:options.selected});
-      console.log("selection:updated");
+    canvas.on('selection:updated', options => {
+      this.setState({ selected: options.selected });
+      console.log('selection:updated');
       console.log(options);
     });
 
-    canvas.on("selection:created",(options)=>{
-
-      this.setState({selected:options.selected});
-      console.log("selection:created");
+    canvas.on('selection:created', options => {
+      this.setState({ selected: options.selected });
+      console.log('selection:created');
       console.log(options);
     });
-  }
-  bind_events = (index) => {
-    if (index===0){
+  };
+  bind_events = index => {
+    if (index === 0) {
       this.bind_select();
-    }
-    else{
-    //绑定画板事件
-    canvas.on('mouse:down', function(options) {
-      var xy = transformMouse(options.e.offsetX, options.e.offsetY);
-      mouseFrom.x = xy.x;
-      mouseFrom.y = xy.y;
-      doDrawing = true;
-    });
-    canvas.on('mouse:up', function(options) {
-      var xy = transformMouse(options.e.offsetX, options.e.offsetY);
-      mouseTo.x = xy.x;
-      mouseTo.y = xy.y;
-      // drawing();
-      drawingObject = null;
-      moveCount = 1;
-      doDrawing = false;
-    });
-    canvas.on('mouse:move', function(options) {
-      if (moveCount % 2 && !doDrawing) {
-        //减少绘制频率
-        return;
-      }
-      moveCount++;
-      var xy = transformMouse(options.e.offsetX, options.e.offsetY);
-      mouseTo.x = xy.x;
-      mouseTo.y = xy.y;
-      drawing();
-    });
-
-    canvas.on('selection:created', function(e) {
-      if (e.target._objects) {
-        //多选删除
-        var etCount = e.target._objects.length;
-        for (var etindex = 0; etindex < etCount; etindex++) {
-          canvas.remove(e.target._objects[etindex]);
+    } else {
+      //绑定画板事件
+      canvas.on('mouse:down', function(options) {
+        var xy = transformMouse(options.e.offsetX, options.e.offsetY);
+        mouseFrom.x = xy.x;
+        mouseFrom.y = xy.y;
+        doDrawing = true;
+      });
+      canvas.on('mouse:up', function(options) {
+        var xy = transformMouse(options.e.offsetX, options.e.offsetY);
+        mouseTo.x = xy.x;
+        mouseTo.y = xy.y;
+        // drawing();
+        drawingObject = null;
+        moveCount = 1;
+        doDrawing = false;
+      });
+      canvas.on('mouse:move', function(options) {
+        if (moveCount % 2 && !doDrawing) {
+          //减少绘制频率
+          return;
         }
-      } else {
-        //单选删除
-        canvas.remove(e.target);
-      }
-      canvas.discardActiveObject(); //清楚选中框
-    });
+        moveCount++;
+        var xy = transformMouse(options.e.offsetX, options.e.offsetY);
+        mouseTo.x = xy.x;
+        mouseTo.y = xy.y;
+        drawing();
+      });
+
+      canvas.on('selection:created', function(e) {
+        if (e.target._objects) {
+          //多选删除
+          var etCount = e.target._objects.length;
+          for (var etindex = 0; etindex < etCount; etindex++) {
+            canvas.remove(e.target._objects[etindex]);
+          }
+        } else {
+          //单选删除
+          canvas.remove(e.target);
+        }
+        canvas.discardActiveObject(); //清楚选中框
+      });
     }
   };
-  componentWillUnmount=()=>{}
+  componentWillUnmount = () => {};
   handleDragStart = () => {
     this.setState({
       dragging: true,
@@ -905,7 +899,7 @@ class HtmlEditor extends Component {
         '<!DOCTYPE html><html><head>\n\n<style>\n\n</style></head><body>\n\n</body></html>',
     });
     canvas.clear();
-    canvas.backgroundColor="rgb(100,100,200)";
+    canvas.backgroundColor = 'rgb(100,100,200)';
   };
   handleDrag = width => {
     this.setState({ html_editor_h: width });
@@ -917,7 +911,7 @@ class HtmlEditor extends Component {
     });
   };
   click_tool = index => {
-    if(index===this.last_tool) return;
+    if (index === this.last_tool) return;
     this.setState({ active_tool: index });
     drawType = tool_types[index]; //jQuery(this).attr("data-type");
     console.log(index);
@@ -934,15 +928,14 @@ class HtmlEditor extends Component {
       canvas.selectable = true;
       this.unbind_events(this.last_tool);
       this.bind_events(index);
-      this.last_tool=index;
+      this.last_tool = index;
       return;
     } else {
-
       this.unbind_events(this.last_tool);
       this.bind_events(index);
-      this.last_tool=index;
+      this.last_tool = index;
     }
-    
+
     if (drawType == 'pen') {
       canvas.isDrawingMode = true;
     } else if (drawType == 'remove') {
@@ -1025,118 +1018,117 @@ class HtmlEditor extends Component {
     //   onChange: canvas.renderAll.bind(canvas)
     // });
   };
-  group=()=> {
-        if (!canvas.getActiveObject()) {
-          return;
-        }
-        if (canvas.getActiveObject().type !== 'activeSelection') {
-          return;
-        }
-        canvas.getActiveObject().toGroup();
-        canvas.requestRenderAll();
-      }
-
-      ungroup=()=> {
-        if (!canvas.getActiveObject()) {
-          return;
-        }
-        if (canvas.getActiveObject().type !== 'group') {
-          return;
-        }
-        canvas.getActiveObject().toActiveSelection();
-        canvas.requestRenderAll();
-      }
-
-Copy=()=> {
-  // clone what are you copying since you
-  // may want copy and paste on different moment.
-  // and you do not want the changes happened
-  // later to reflect on the copy.
-  canvas.getActiveObject().clone(function(cloned) {
-    _clipboard = cloned;
-  });
-}
-
-Paste=()=> {
-  // clone again, so you can do multiple copies.
-  if(!_clipboard) return;
-  _clipboard.clone(function(clonedObj) {
-    canvas.discardActiveObject();
-    clonedObj.set({
-      left: clonedObj.left + 10,
-      top: clonedObj.top + 10,
-      evented: true,
-    });
-    if (clonedObj.type === 'activeSelection') {
-      // active selection needs a reference to the canvas.
-      clonedObj.canvas = canvas;
-      clonedObj.forEachObject(function(obj) {
-        canvas.add(obj);
-      });
-      // this should solve the unselectability
-      clonedObj.setCoords();
-    } else {
-      canvas.add(clonedObj);
+  group = () => {
+    if (!canvas.getActiveObject()) {
+      return;
     }
-    _clipboard.top += 10;
-    _clipboard.left += 10;
-    canvas.setActiveObject(clonedObj);
+    if (canvas.getActiveObject().type !== 'activeSelection') {
+      return;
+    }
+    canvas.getActiveObject().toGroup();
     canvas.requestRenderAll();
-  });
-}
-  change_color=()=>{
-    this.setState({show_color:true});
-  }
-  selectAll = ()=> {
-        canvas.discardActiveObject();
-        var sel = new fabric.ActiveSelection(canvas.getObjects(), {
-          canvas: canvas,
-        });
-        canvas.setActiveObject(sel);
-        canvas.requestRenderAll();
-      }
-      selectNone = ()=> {
-        canvas.discardActiveObject();
-        canvas.requestRenderAll();
-      }
- removeScript=()=> {
-  var active = canvas.getActiveObject();
-  if (!active) return;
-  active.setSelectionStyles({
-    fontSize: undefined,
-    deltaY: undefined,
-  });
-  canvas.requestRenderAll();
-}
+  };
 
-superScript=()=> {
-  var active = canvas.getActiveObject();
-  if (!active) return;
-  active.setSuperscript();
-  canvas.requestRenderAll();
-}
-delete1=()=>{
-  var active = canvas.getActiveObject();
-  console.log(active);
-  if(!active) return;
-  if (active.type === 'activeSelection') {
+  ungroup = () => {
+    if (!canvas.getActiveObject()) {
+      return;
+    }
+    if (canvas.getActiveObject().type !== 'group') {
+      return;
+    }
+    canvas.getActiveObject().toActiveSelection();
+    canvas.requestRenderAll();
+  };
+
+  Copy = () => {
+    // clone what are you copying since you
+    // may want copy and paste on different moment.
+    // and you do not want the changes happened
+    // later to reflect on the copy.
+    canvas.getActiveObject().clone(function(cloned) {
+      _clipboard = cloned;
+    });
+  };
+
+  Paste = () => {
+    // clone again, so you can do multiple copies.
+    if (!_clipboard) return;
+    _clipboard.clone(function(clonedObj) {
+      canvas.discardActiveObject();
+      clonedObj.set({
+        left: clonedObj.left + 10,
+        top: clonedObj.top + 10,
+        evented: true,
+      });
+      if (clonedObj.type === 'activeSelection') {
+        // active selection needs a reference to the canvas.
+        clonedObj.canvas = canvas;
+        clonedObj.forEachObject(function(obj) {
+          canvas.add(obj);
+        });
+        // this should solve the unselectability
+        clonedObj.setCoords();
+      } else {
+        canvas.add(clonedObj);
+      }
+      _clipboard.top += 10;
+      _clipboard.left += 10;
+      canvas.setActiveObject(clonedObj);
+      canvas.requestRenderAll();
+    });
+  };
+  change_color = () => {
+    this.setState({ show_color: true });
+  };
+  selectAll = () => {
+    canvas.discardActiveObject();
+    var sel = new fabric.ActiveSelection(canvas.getObjects(), {
+      canvas: canvas,
+    });
+    canvas.setActiveObject(sel);
+    canvas.requestRenderAll();
+  };
+  selectNone = () => {
+    canvas.discardActiveObject();
+    canvas.requestRenderAll();
+  };
+  removeScript = () => {
+    var active = canvas.getActiveObject();
+    if (!active) return;
+    active.setSelectionStyles({
+      fontSize: undefined,
+      deltaY: undefined,
+    });
+    canvas.requestRenderAll();
+  };
+
+  superScript = () => {
+    var active = canvas.getActiveObject();
+    if (!active) return;
+    active.setSuperscript();
+    canvas.requestRenderAll();
+  };
+  delete1 = () => {
+    var active = canvas.getActiveObject();
+    console.log(active);
+    if (!active) return;
+    if (active.type === 'activeSelection') {
       active.forEachObject(function(obj) {
         canvas.remove(obj);
       });
-  }
-  else{
-    canvas.remove(active);
-  }
-  canvas.discardActiveObject();
-  // canvas.requestRenderAll();
-}
-subScript=()=> {
-  var active = canvas.getActiveObject();
-  if (!active) return;
-  active.setSubscript();
-  canvas.requestRenderAll();
-}
-  render=()=> {
+    } else {
+      canvas.remove(active);
+    }
+    canvas.discardActiveObject();
+    // canvas.requestRenderAll();
+  };
+  subScript = () => {
+    var active = canvas.getActiveObject();
+    if (!active) return;
+    active.setSubscript();
+    canvas.requestRenderAll();
+  };
+  render = () => {
     // console.log(this.state);
     // let $ = cheerio.load(this.state.html,{
     //          xmlMode: true,
@@ -1186,7 +1178,7 @@ subScript=()=> {
         );
       }
     });
-    console.log("=====================================")
+    console.log('=====================================');
     console.log(this.state);
     return (
       <div id="root_new">
@@ -1242,7 +1234,7 @@ subScript=()=> {
             </button>
             <button onClick={this.group}>group</button>
             <button onClick={this.ungroup}>un group</button>
-            
+
             <button onClick={this.Copy}>copy</button>
             <button onClick={this.Paste}>Paste</button>
             <button onClick={this.selectAll}>全选</button>
@@ -1257,7 +1249,7 @@ subScript=()=> {
           </div>
           <div
             style={{
-              backgroundColor:"#000",
+              backgroundColor: '#000',
               flex: 1,
               width: '100%',
               height: `calc(100vh - ${toolbar_h})`,
@@ -1274,84 +1266,132 @@ subScript=()=> {
               style={{
                 width: '100%',
                 height: 'calc(100vh - ${toolbar_h})',
-                backgroundColor:"#070",
+                backgroundColor: '#070',
               }}
             >
               <canvas
                 id="c"
                 ref="canvas"
-                style={{ margin:"30px 30px 30px 30px"
-                  ,width: this.state.canvasSize.width
-                  , height: this.state.canvasSize.height}}
+                style={{
+                  margin: '30px 30px 30px 30px',
+                  width: this.state.canvasSize.width,
+                  height: this.state.canvasSize.height,
+                }}
               >
                 请使用支持HTML5的浏览器
               </canvas>
             </div>
           </div>
         </div>
-           <div id="contain_preview">
-             <button onClick={()=>{
-                if(this.state.showPreview==="none"){
-                  this.setState({showPreview:"flex"});
-                }
-                else{
-                  this.setState({showPreview:"none"}); 
-                }
-             }}>pen</button>
-           <div style={{margin:"10 10 10 10",with:"250px",height:"330px",
-              flexDirection:"column",
-              display:this.state.showPreview}}>
+        <div id="contain_preview">
+          <button
+            onClick={() => {
+              if (this.state.showPreview === 'none') {
+                this.setState({ showPreview: 'flex' });
+              } else {
+                this.setState({ showPreview: 'none' });
+              }
+            }}
+          >
+            pen
+          </button>
+          <div
+            style={{
+              margin: '10 10 10 10',
+              with: '250px',
+              height: '330px',
+              flexDirection: 'column',
+              display: this.state.showPreview,
+            }}
+          >
+            <div>
+              <div id="drawing-mode-options">
+                <label>Mode:</label>
+                <select
+                  id="drawing-mode-selector"
+                  value={this.state.mode}
+                  onChange={this.mode_change}
+                >
+                  <option>Pencil</option>
+                  <option>Circle</option>
+                  <option>Spray</option>
+                  <option>Pattern</option>
+                  <option>hline</option>
+                  <option>vline</option>
+                  <option>square</option>
+                  <option>diamond</option>
+                  <option>texture</option>
+                </select>
+                <br />
+                <label>Line width:</label>
+                <input
+                  value={this.state.pen_width}
+                  onChange={this.pen_width_change}
+                  id="drawing-line-width"
+                />
+                <br />
 
-             <div>
-  <div id="drawing-mode-options">
-    <label>Mode:</label>
-    <select id="drawing-mode-selector" value={this.state.mode}
-              onChange={this.mode_change}>
-      <option>Pencil</option>
-      <option>Circle</option>
-      <option>Spray</option>
-      <option>Pattern</option>
-      <option>hline</option>
-      <option>vline</option>
-      <option>square</option>
-      <option>diamond</option>
-      <option>texture</option>
-    </select><br />
-    <label >Line width:</label>
-    <input value={this.state.pen_width}
-              onChange={this.pen_width_change} id="drawing-line-width" /><br />
+                <label>Line color:</label>
+                <input
+                  type="color"
+                  value={this.state.color}
+                  onChange={this.color_change}
+                  id="drawing-color"
+                />
+                <br />
 
-    <label >Line color:</label>
-    <input type="color" value={this.state.color} onChange={this.color_change} id="drawing-color" /><br />
+                <label>Shadow color:</label>
+                <input
+                  type="color"
+                  value={this.state.shadow_color}
+                  onChange={this.shadow_color_change}
+                  id="drawing-shadow-color"
+                />
+                <br />
 
-    <label >Shadow color:</label>
-    <input type="color" value={this.state.shadow_color}  onChange={this.shadow_color_change} id="drawing-shadow-color" /><br/>
+                <label>Shadow width:</label>
+                <input
+                  value={this.state.shadow_width}
+                  onChange={this.shadow_width_change}
+                  id="drawing-shadow-width"
+                />
+                <br />
 
-    <label >Shadow width:</label>
-    <input value={this.state.shadow_width}
-              onChange={this.shadow_width_change} id="drawing-shadow-width" /><br />
-
-    <label >Shadow offset:</label>
-    <input value={this.state.shadow_offset}
-              onChange={this.shadow_offset_change} id="drawing-shadow-offset" /><br />
-  </div>
-</div>
-           </div>
+                <label>Shadow offset:</label>
+                <input
+                  value={this.state.shadow_offset}
+                  onChange={this.shadow_offset_change}
+                  id="drawing-shadow-offset"
+                />
+                <br />
+              </div>
+            </div>
           </div>
-          <div id="contain_prop">
-           <div style={{margin:"10 10 10 10",
-              display:this.state.show_prop}}>
-             <PropEdit selected={this.state.selected} propChange={this.propChange}/>
-           </div>
-           <button onClick={()=>{
-                if(this.state.show_prop==="none"){
-                  this.setState({show_prop:"block"});
-                }
-                else{
-                  this.setState({show_prop:"none"}); 
-                }
-             }}>prop</button>
+        </div>
+        <div id="contain_prop">
+          <div
+            style={{
+              margin: '10 10 10 10',
+              display: this.state.show_prop,
+            }}
+          >
+            <PropEdit
+              selected={this.state.selected}
+              propChange={this.propChange}
+            />
           </div>
+          <button
+            onClick={() => {
+              if (this.state.show_prop === 'none') {
+                this.setState({ show_prop: 'block' });
+              } else {
+                this.setState({ show_prop: 'none' });
+              }
+            }}
+          >
+            prop
+          </button>
+        </div>
         <style jsx="true">{`
           body {
             margin: 0 0 0 0;
@@ -1398,7 +1438,7 @@ subScript=()=> {
         `}</style>
       </div>
     );
-  }
+  };
 }
 
 export default HtmlEditor;

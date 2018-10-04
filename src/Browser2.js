@@ -550,17 +550,20 @@ class Browser extends React.Component {
             <tr>
               <th>
                 <button onClick={this.pathSort}>
-                  <span className="glyphicon glyphicon-sort" />名称
+                  <span className="glyphicon glyphicon-sort" />
+                  名称
                 </button>
               </th>
               <th>
                 <button onClick={this.sizeSort}>
-                  <span className="glyphicon glyphicon-sort" />大小
+                  <span className="glyphicon glyphicon-sort" />
+                  大小
                 </button>
               </th>
               <th>
                 <button onClick={this.timeSort}>
-                  <span className="glyphicon glyphicon-sort" />修改日期
+                  <span className="glyphicon glyphicon-sort" />
+                  修改日期
                 </button>
               </th>
             </tr>

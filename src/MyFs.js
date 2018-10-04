@@ -10,12 +10,12 @@ let path_obj = path.parse(app_root);
 app_root = path_obj.root;
 console.log(app_root);
 function myPathObj(p) {
-  let stat=null;
+  let stat = null;
   try {
-        stat = fs.statSync(p);
+    stat = fs.statSync(p);
   } catch (err) {
-        console.log(err);
-        // this.setState({filename:"about:blank"});
+    console.log(err);
+    // this.setState({filename:"about:blank"});
   }
   return {
     path: path.relative(app_root, p),
