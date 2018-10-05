@@ -35,11 +35,6 @@ var doDrawing = false; // 绘制状态
 let canvas;
 let _clipboard;
 
-//坐标转换
-function transformMouse(mouseX, mouseY) {
-  let zoom = canvas.getZoom();
-  return { x: mouseX / zoom, y: mouseY / zoom };
-}
 //绘画方法
 
 //绘制箭头方法
@@ -67,12 +62,6 @@ function drawArrow(fromX, fromY, toX, toY, theta, headlen) {
   path += ' L ' + arrowX + ' ' + arrowY;
   return path;
 }
-
-//获取画板对象的下标
-function getCanvasObjectIndex() {
-  return canvasObjectIndex++;
-}
-
 const path = window.require('path');
 const fs = window.require('fs');
 const electron = window.require('electron');
@@ -100,7 +89,7 @@ class Editor extends Component {
       this.setState({ show_about: true });
     });
     this.state = {
-      background_color: '#112233',
+      background_color: 'rgba(23,23,23,0.9)',
       fabricUndo_disabled: true,
       fabricRedo_disabled: true,
       fill:"rgba(100,200,123,0.5)",
@@ -466,13 +455,14 @@ class Editor extends Component {
     } else {
       //绑定画板事件
       canvas.on('mouse:down', function(options) {
-        var xy = transformMouse(options.e.offsetX, options.e.offsetY);
+        console.log(options);
+        var xy = options.absolutePointer;//transformMouse(options.e.offsetX, options.e.offsetY);
         mouseFrom.x = xy.x;
         mouseFrom.y = xy.y;
         doDrawing = true;
       });
       canvas.on('mouse:up', options => {
-        var xy = transformMouse(options.e.offsetX, options.e.offsetY);
+        var xy = options.absolutePointer;//transformMouse(options.e.offsetX, options.e.offsetY);
         mouseTo.x = xy.x;
         mouseTo.y = xy.y;
         // drawing();
@@ -487,7 +477,7 @@ class Editor extends Component {
           return;
         }
         moveCount++;
-        var xy = transformMouse(options.e.offsetX, options.e.offsetY);
+        var xy = options.absolutePointer;//transformMouse(options.e.offsetX, options.e.offsetY);
         mouseTo.x = xy.x;
         mouseTo.y = xy.y;
         this.drawing();
