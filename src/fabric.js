@@ -5,7 +5,7 @@ var fabric = fabric || { version: '2.4.1' };
 if (typeof exports !== 'undefined') {
   exports.fabric = fabric;
 } else if (typeof define === 'function' && define.amd) {
-/* _AMD_START_ */
+  /* _AMD_START_ */
   define([], function() {
     return fabric;
   });

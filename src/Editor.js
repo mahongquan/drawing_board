@@ -1,14 +1,12 @@
 import React, { Component } from 'react';
 import DlgAbout from './DlgAbout';
 import DlgColor from './DlgColor';
-// import AceEditor from 'react-ace';
-// import 'brace/mode/html';
-// import 'brace/theme/tomorrow_night';
 import data from './Data';
 import Browser from './Browser2';
 import MyFs from './MyFs';
-import { SketchPicker } from 'react-color';
+import { PhotoshopPicker,SketchPicker,AlphaPicker } from 'react-color';
 import PropEdit from './PropEdit';
+import sprintf from 'sprintf';
 var panning = false;
 const tool_types = [
   'move',
@@ -39,178 +37,10 @@ let _clipboard;
 
 //坐标转换
 function transformMouse(mouseX, mouseY) {
-  let zoom=canvas.getZoom();
+  let zoom = canvas.getZoom();
   return { x: mouseX / zoom, y: mouseY / zoom };
 }
 //绘画方法
-function drawing() {
-  if (drawingObject) {
-    canvas.remove(drawingObject);
-  }
-  var canvasObject = null;
-  switch (drawType) {
-    case 'arrow': //箭头
-      canvasObject = new fabric.Path(
-        drawArrow(mouseFrom.x, mouseFrom.y, mouseTo.x, mouseTo.y, 30, 30),
-        {
-          stroke: color,
-          fill: 'rgba(255,255,255,0)',
-          strokeWidth: drawWidth,
-        }
-      );
-      break;
-    case 'line': //直线
-      canvasObject = new fabric.Line(
-        [mouseFrom.x, mouseFrom.y, mouseTo.x, mouseTo.y],
-        {
-          stroke: color,
-          strokeWidth: drawWidth,
-        }
-      );
-      break;
-    case 'dottedline': //虚线
-      canvasObject = new fabric.Line(
-        [mouseFrom.x, mouseFrom.y, mouseTo.x, mouseTo.y],
-        {
-          strokeDashArray: [3, 1],
-          stroke: color,
-          strokeWidth: drawWidth,
-        }
-      );
-      break;
-    case 'circle': //正圆
-      var left = mouseFrom.x,
-        top = mouseFrom.y;
-      var radius =
-        Math.sqrt(
-          (mouseTo.x - left) * (mouseTo.x - left) +
-            (mouseTo.y - top) * (mouseTo.y - top)
-        ) / 2;
-      canvasObject = new fabric.Circle({
-        left: left,
-        top: top,
-        stroke: color,
-        fill: 'rgba(255, 255, 255, 0)',
-        radius: radius,
-        strokeWidth: drawWidth,
-      });
-      break;
-    case 'ellipse': //椭圆
-      var left = mouseFrom.x,
-        top = mouseFrom.y;
-      var radius =
-        Math.sqrt(
-          (mouseTo.x - left) * (mouseTo.x - left) +
-            (mouseTo.y - top) * (mouseTo.y - top)
-        ) / 2;
-      canvasObject = new fabric.Ellipse({
-        left: left,
-        top: top,
-        stroke: color,
-        fill: 'rgba(255, 255, 255, 0)',
-        originX: 'center',
-        originY: 'center',
-        rx: Math.abs(left - mouseTo.x),
-        ry: Math.abs(top - mouseTo.y),
-        strokeWidth: drawWidth,
-      });
-      break;
-    case 'square': //TODO:正方形（后期完善）
-      break;
-    case 'rectangle': //长方形
-      var path =
-        'M ' +
-        mouseFrom.x +
-        ' ' +
-        mouseFrom.y +
-        ' L ' +
-        mouseTo.x +
-        ' ' +
-        mouseFrom.y +
-        ' L ' +
-        mouseTo.x +
-        ' ' +
-        mouseTo.y +
-        ' L ' +
-        mouseFrom.x +
-        ' ' +
-        mouseTo.y +
-        ' L ' +
-        mouseFrom.x +
-        ' ' +
-        mouseFrom.y +
-        ' z';
-      canvasObject = new fabric.Path(path, {
-        left: left,
-        top: top,
-        stroke: color,
-        strokeWidth: drawWidth,
-        fill: 'rgba(255, 255, 255, 0)',
-      });
-      //也可以使用fabric.Rect
-      break;
-    case 'rightangle': //直角三角形
-      var path =
-        'M ' +
-        mouseFrom.x +
-        ' ' +
-        mouseFrom.y +
-        ' L ' +
-        mouseFrom.x +
-        ' ' +
-        mouseTo.y +
-        ' L ' +
-        mouseTo.x +
-        ' ' +
-        mouseTo.y +
-        ' z';
-      canvasObject = new fabric.Path(path, {
-        left: left,
-        top: top,
-        stroke: color,
-        strokeWidth: drawWidth,
-        fill: 'rgba(255, 255, 255, 0)',
-      });
-      break;
-    case 'equilateral': //等边三角形
-      var height = mouseTo.y - mouseFrom.y;
-      canvasObject = new fabric.Triangle({
-        top: mouseFrom.y,
-        left: mouseFrom.x,
-        width: Math.sqrt(Math.pow(height, 2) + Math.pow(height / 2.0, 2)),
-        height: height,
-        stroke: color,
-        strokeWidth: drawWidth,
-        fill: 'rgba(255,255,255,0)',
-      });
-      break;
-    case 'isosceles':
-      break;
-    case 'text':
-      textbox = new fabric.Textbox('', {
-        left: mouseFrom.x - 60,
-        top: mouseFrom.y - 20,
-        width: 150,
-        fontSize: 28,
-        borderColor: '#2c2c2c',
-        fill: color,
-        hasControls: false,
-      });
-      canvas.add(textbox);
-      textbox.enterEditing();
-      textbox.hiddenTextarea.focus();
-      break;
-    case 'remove':
-      break;
-    default:
-      break;
-  }
-  if (canvasObject) {
-    // canvasObject.index = getCanvasObjectIndex();
-    canvas.add(canvasObject); //.setActiveObject(canvasObject)
-    drawingObject = canvasObject;
-  }
-}
 
 //绘制箭头方法
 function drawArrow(fromX, fromY, toX, toY, theta, headlen) {
@@ -250,17 +80,6 @@ const { ipcRenderer } = window.require('electron'); //
 const fontSize = 16;
 const toolbar_h = 70;
 class Editor extends Component {
-  cssChange = newv => {
-    this.setState({ css: newv });
-  };
-  htmlChange = newv => {
-    this.setState({ html: newv }, () => {
-      // this.updateFrame();
-    });
-  };
-  // preview = () => {
-  //   this.setState({csshtml: `<style>${this.state.css}</style>${this.state.html}`});
-  // };
   constructor() {
     super();
     data.getconfig();
@@ -281,9 +100,11 @@ class Editor extends Component {
       this.setState({ show_about: true });
     });
     this.state = {
-      fabricUndo_disabled:true,
-      fabricRedo_disabled:true,
-      zoom:1,
+      background_color: '#112233',
+      fabricUndo_disabled: true,
+      fabricRedo_disabled: true,
+      fill:"rgba(100,200,123,0.5)",
+      zoom: 1,
       mode: 'Pencil',
       shadow_color: '#00FF00',
       shadow_width: 10,
@@ -303,15 +124,23 @@ class Editor extends Component {
       color: color,
       selected: null,
     };
-     this.fabricHistory = [];
-      this.fabricHistoryMods = -1;
-      this.fabricHistoryReplay = false;
-      this.history_len=0;
+    this.fabricHistory = [];
+    this.fabricHistoryMods = -1;
+    this.fabricHistoryReplay = false;
+    this.history_len = 0;
   }
+  background_color_change = e => {
+    canvas.backgroundColor = e.target.value;
+    canvas.renderAll();
+    this.setState({ background_color: e.target.value });
+  };
   reset_zoom = () => {
     canvas.setZoom(1.0);
     let now_center = canvas.getVpCenter();
-    canvas.relativePan({ x: now_center.x - this.state.canvasSize.width/2, y: now_center.y - this.state.canvasSize.height/2 });
+    canvas.relativePan({
+      x: now_center.x - this.state.canvasSize.width / 2,
+      y: now_center.y - this.state.canvasSize.height / 2,
+    });
   };
   zoomToFitCanvas = () => {
     //遍历所有对对象，获取最小坐标，最大坐标
@@ -401,51 +230,32 @@ class Editor extends Component {
     });
     // }
   };
-  onChangeComplete = vcolor => {
-    // console.log(vcolor);
-
-    this.setState({ color: vcolor.hex });
-    color = vcolor.hex;
-    canvas.freeDrawingBrush.color = vcolor.hex;
+  onChangeComplete_fill = vcolor => {
+    console.log(vcolor);
+    let s=sprintf("rgba(%d,%d,%d,%f)",vcolor.rgb.r,vcolor.rgb.g,vcolor.rgb.b,vcolor.rgb.a);
+    this.setState({ fill: s });
+    // color = vcolor.hex;
+    // canvas.freeDrawingBrush.color = vcolor.hex;
   };
   componentWillUnmount = () => {
     // window.removeEventListener('resize',this.resize);
   };
 
-  resize = e => {
-    this.setState(
-      { canvasSize: { width: window.innerWidth, height: window.innerHeight } },
-      () => {
-        canvas.set({
-          width: this.refs.canvas.clientWidth,
-          height: this.refs.canvas.clientHeight,
-        });
-      }
-    );
-    // console.log("resize");
-    // canvas.renderAll();
-    // canvas.clear();
-    // canvas = new fabric.Canvas('c', {
-    //   backgroundColor: 'rgb(100,100,200)',
-    //   width: this.refs.canvas.clientWidth,
-    //   height: this.refs.canvas.clientHeight,
-    //   isDrawingMode: false,
-    //   skipTargetFind: false,
-    //   selectable: true,
-    //   selection: true,
-    // });
-    // window.canvas = canvas;
-    // window.zoom = window.zoom ? window.zoom : 1;
-
-    // canvas.freeDrawingBrush.color = color; //设置自由绘颜色
-    // canvas.freeDrawingBrush.width = drawWidth;
-    // // this.bind_events();
-    // this.bind_select();
-  };
+  // resize = e => {
+  //   this.setState(
+  //     { canvasSize: { width: window.innerWidth, height: window.innerHeight } },
+  //     () => {
+  //       canvas.set({
+  //         width: this.refs.canvas.clientWidth,
+  //         height: this.refs.canvas.clientHeight,
+  //       });
+  //     }
+  //   );
+  // };
   componentDidMount = () => {
     console.log(canvas);
     canvas = new fabric.Canvas('c', {
-      backgroundColor: 'rgb(100,100,200)',
+      backgroundColor: this.state.background_color,
       width: this.refs.canvas.clientWidth,
       height: this.refs.canvas.clientHeight,
       isDrawingMode: false,
@@ -455,8 +265,6 @@ class Editor extends Component {
     });
 
     window.canvas = canvas;
-    // window.zoom = window.zoom ? window.zoom : 1;
-
     canvas.freeDrawingBrush.color = color; //设置自由绘颜色
     canvas.freeDrawingBrush.width = drawWidth;
     this.last_tool = 0;
@@ -552,57 +360,32 @@ class Editor extends Component {
       this.texturePatternBrush = new fabric.PatternBrush(canvas);
       this.texturePatternBrush.source = img;
     }
-    // canvas.on('object:modified',(e)=> {
-    //             if (this.fabricHistoryReplay === false) {
-    //                 this.fabricSaveCanvasToObject();
-    //             }
-    //         });
-    // canvas.on('object:added',(e)=>{
-    //             if (this.fabricHistoryReplay === false) {
-    //                 this.fabricSaveCanvasToObject();
-    //             }
-    //         });
-    // canvas.on('object:removed',(e)=>{
-    //             if (this.fabricHistoryReplay === false) {
-    //                 this.fabricSaveCanvasToObject();
-    //             }
-    //         });
   };
-  fabricDisableUndoRedo = () =>{
-        var self = this;
-        var mods = this.fabricHistoryMods;
-        var hist = this.history_len;
-        // No redo steps left
-        if ( hist>0 && mods<hist-1) {
-            this.setState({fabricRedo_disabled: false});
-        }
-        else {
-            this.setState({fabricRedo_disabled: true});
-        }
-        // No undo steps left or no history
-        if (mods<-1 || hist === 0) {
-          this.setState({fabricUndo_disabled: true});
-        }
-        else {
-          this.setState({fabricUndo_disabled: false});
-        }
+  fabricDisableUndoRedo = () => {
+    var self = this;
+    var mods = this.fabricHistoryMods;
+    var hist = this.history_len;
+    // No redo steps left
+    if (hist > 0 && mods < hist - 1) {
+      this.setState({ fabricRedo_disabled: false });
+    } else {
+      this.setState({ fabricRedo_disabled: true });
     }
-  fabricSaveCanvasToObject=()=>{
-        var obj = JSON.stringify(canvas.toDatalessJSON());
-        if(obj===this.fabricHistory[this.fabricHistoryMods]) return;//not change
-        // Reset mods due to new action
-        this.fabricHistoryMods +=1;
-        // if (this.fabricHistory.length === 6) {
-        //     this.fabricHistory.shift();
-        //     this.fabricHistory.push(obj);
-        // }
-        // else if (this.fabricHistory.length < 6) {
-        this.fabricHistory[this.fabricHistoryMods]=obj;
-        this.history_len=this.fabricHistoryMods+1;
-        // }
-        // Disable or enable buttons
-        this.fabricDisableUndoRedo();
-  }
+    // No undo steps left or no history
+    if (mods < -1 || hist === 0) {
+      this.setState({ fabricUndo_disabled: true });
+    } else {
+      this.setState({ fabricUndo_disabled: false });
+    }
+  };
+  fabricSaveCanvasToObject = () => {
+    var obj = JSON.stringify(canvas.toDatalessJSON());
+    if (obj === this.fabricHistory[this.fabricHistoryMods]) return; //not change
+    this.fabricHistoryMods += 1;
+    this.fabricHistory[this.fabricHistoryMods] = obj;
+    this.history_len = this.fabricHistoryMods + 1;
+    this.fabricDisableUndoRedo();
+  };
   unbind_events = index => {
     if (index === 0) {
       this.unbind_select();
@@ -614,10 +397,8 @@ class Editor extends Component {
     }
   };
   unbind_select = () => {
-    // let upper=document.getElementsByClassName("upper-canvas");
-    // if(upper) {upper[0].removeEventListener("mousewheel",this.mousewheel);}
+    // canvas.upperCanvasEl.removeEventListener("mousewheel",this.mousewheel);
     canvas.off('mouse:down');
-
     //鼠标抬起
     canvas.off('mouse:up');
 
@@ -638,11 +419,8 @@ class Editor extends Component {
     canvas.zoomToPoint(zoomPoint, zoom);
   };
   bind_select = () => {
-    // let upper=document.getElementsByClassName("upper-canvas");
-    // console.log(upper);
-    // if(upper){
-    //   upper[0].addEventListener("mousewheel",this.mousewheel);
-    // }
+    console.log('addEventListener');
+    // canvas.upperCanvasEl.addEventListener("mousewheel",this.mousewheel);
     canvas.on('mouse:down', function(e) {
       //按住alt键才可拖动画布
       if (e.e.altKey) {
@@ -693,7 +471,7 @@ class Editor extends Component {
         mouseFrom.y = xy.y;
         doDrawing = true;
       });
-      canvas.on('mouse:up', (options)=>{
+      canvas.on('mouse:up', options => {
         var xy = transformMouse(options.e.offsetX, options.e.offsetY);
         mouseTo.x = xy.x;
         mouseTo.y = xy.y;
@@ -703,7 +481,7 @@ class Editor extends Component {
         doDrawing = false;
         this.fabricSaveCanvasToObject();
       });
-      canvas.on('mouse:move', function(options) {
+      canvas.on('mouse:move', (options)=> {
         if (moveCount % 2 && !doDrawing) {
           //减少绘制频率
           return;
@@ -712,10 +490,10 @@ class Editor extends Component {
         var xy = transformMouse(options.e.offsetX, options.e.offsetY);
         mouseTo.x = xy.x;
         mouseTo.y = xy.y;
-        drawing();
+        this.drawing();
       });
 
-      canvas.on('selection:created', function(e) {
+      canvas.on('selection:created', (e)=> {
         if (e.target._objects) {
           //多选删除
           var etCount = e.target._objects.length;
@@ -773,15 +551,15 @@ class Editor extends Component {
         if (path.parse(res[0]).ext === '.svg') {
           fabric.loadSVGFromString(content, function(objects, options) {
             var obj = fabric.util.groupSVGElements(objects, options);
-            canvas.clear();  //reset canvas
-            this.fabricHistoryMods=-1;//reset history
-            this.history_len=0;
-            this.reset_zoom();   //reset zoom
+            canvas.clear(); //reset canvas
+            this.fabricHistoryMods = -1; //reset history
+            this.history_len = 0;
+            this.reset_zoom(); //reset zoom
             canvas.add(obj).renderAll();
           });
         } else {
-          this.fabricHistoryMods=-1;
-          this.history_len=0;
+          this.fabricHistoryMods = -1;
+          this.history_len = 0;
           this.reset_zoom();
           canvas.loadFromJSON(content);
         }
@@ -804,29 +582,6 @@ class Editor extends Component {
     }
     return;
   };
-  // updateFrame = () => {
-  //   let frame = window.frames['preview'];
-  //   if (frame) {
-  //     let filepath = path.dirname(this.state.filename);
-  //     // let $ = cheerio.load(this.state.html,{
-  //     //    xmlMode: true,
-  //     //    lowerCaseTags: false
-  //     // });
-  //     // $("head").prepend(`<base href="${filepath}/" />`);
-  //     let content = this.state.html;
-  //     content = content.replace('<head>', `<head><base href="${filepath}/" />`);
-  //     let doc = window.frames['preview'].document;
-  //     if (!doc) return;
-  //     try {
-  //       doc.open();
-  //       doc.write(content);
-  //       doc.close();
-  //     } catch (err) {
-  //       console.log(err);
-  //       // this.setState({filename:"about:blank"});
-  //     }
-  //   }
-  // };
   anim = () => {
     //console.log(e.target.value);
     this.setState(
@@ -864,6 +619,8 @@ class Editor extends Component {
         if (res) {
           this.anim();
           this.setState({ filename: res });
+          this.fabricHistoryMods = -1;
+          this.history_len = 0;
 
           if (path.parse(res).ext === '.svg') {
             fs.writeFileSync(res, this.genOutSvg());
@@ -877,43 +634,30 @@ class Editor extends Component {
   save_click = () => {
     if (this.state.filename != '') {
       this.anim();
-      fs.writeFileSync(this.state.filename, this.genOut());
+      this.fabricHistoryMods = -1;
+      this.history_len = 0;
+
+      if (path.parse(this.state.filename).ext === '.svg') {
+        fs.writeFileSync(this.state.filename, this.genOutSvg());
+      } else {
+        fs.writeFileSync(this.state.filename, this.genOut());
+      }
     } else {
       this.save_as_click();
     }
   };
   genOutSvg = () => {
     return canvas.toSVG();
-    // `<html><body><style>${this.state.css}</style>${this.state.html}</body></html>`
-    // let $ = cheerio.load(this.state.html,{
-    //          xmlMode: true,
-    //          lowerCaseTags: false
-    //       });
-    // let html=$("body").append(`<style>this.state.css</style`)
   };
   genOut = () => {
     return JSON.stringify(canvas);
-    // `<html><body><style>${this.state.css}</style>${this.state.html}</body></html>`
-    // let $ = cheerio.load(this.state.html,{
-    //          xmlMode: true,
-    //          lowerCaseTags: false
-    //       });
-    // let html=$("body").append(`<style>this.state.css</style`)
-  };
-  handleDragEnd = () => {
-    // console.log(this.cssEditor.current);
-    this.cssEditor.current.editor.resize();
-    this.htmlEditor.current.editor.resize();
-    this.setState({
-      dragging: false,
-    });
   };
   newfile = () => {
     this.setState({
-      filename: ''
+      filename: '',
     });
-    this.fabricHistoryMods=-1;
-    this.history_len=0;
+    this.fabricHistoryMods = -1;
+    this.history_len = 0;
     canvas.clear();
     canvas.backgroundColor = 'rgb(100,100,200)';
   };
@@ -928,8 +672,8 @@ class Editor extends Component {
   };
   click_tool = index => {
     if (index === this.last_tool) return;
-    
-    this.setState({ active_tool: index },()=>{
+
+    this.setState({ active_tool: index }, () => {
       this.fabricSaveCanvasToObject();
     });
     drawType = tool_types[index]; //jQuery(this).attr("data-type");
@@ -1099,13 +843,12 @@ class Editor extends Component {
   change_color = () => {
     this.setState({ show_color: true });
   };
-  zoom_change=(e)=>{
+  zoom_change = e => {
     console.log(e);
-    this.setState({zoom:parseInt(e.target.value,10)},()=>{
-      canvas.setZoom(this.state.zoom);  
+    this.setState({ zoom: parseInt(e.target.value, 10) }, () => {
+      canvas.setZoom(this.state.zoom);
     });
-    
-  }
+  };
   selectAll = () => {
     canvas.discardActiveObject();
     var sel = new fabric.ActiveSelection(canvas.getObjects(), {
@@ -1154,81 +897,196 @@ class Editor extends Component {
     active.setSubscript();
     canvas.requestRenderAll();
   };
-  undo=()=>{
-    console.log("undo");
-    this.fabricHistoryMods-=1;
-    // console.log(this.fabricHistory[this.fabricHistoryMods]);
+  undo = () => {
+    console.log('undo');
+    this.fabricHistoryMods -= 1;
     this.fabricDisableUndoRedo();
-        // this.fabricHistoryReplay = true;
-        // var self = this;
-        // var cb = function () {
-        //     self.fabricHistoryReplay = false;
-        // };
-        // if (this.fabricHistoryMods < this.fabricHistory.length) {
-        //     // if (this.fabricHistoryMods !== 5) {
-        //         // Clear canvas
-                canvas.clear();
-                var obj = this.fabricHistory[this.fabricHistoryMods];
-                canvas.loadFromDatalessJSON(obj, ()=>{}, canvas.renderAll.bind(canvas));
-        //         this.fabricHistoryMods += 1;
-        //     // }
-        // }
-  }
-  // fabricSaveLocalStorage = () =>{
-  //       if (localStorage) {
-  //           var obj = JSON.stringify(canvas.toDatalessJSON());
-  //           localStorage.setItem('fabricCanvas', obj);
-  //           canvas.renderAll();
-  //       }
-  //   };
-  //   /**
-  //    * Load the canvas
-  //    */
-  //   fabricLoadLocalStorage =  () =>{
-  //       var self = this;
-  //       var obj;
-  //       var cb = function () {
-  //           self.fabricHistory = [];
-  //           self.fabricHistory.push(obj);
-  //           self.fabricHistoryMods = 0;
-  //           self.fabricHistoryReplay = false;
-  //           self.fabricDisableUndoRedo();
-  //       };
-  //       if (localStorage) {
-  //           obj = localStorage.getItem('fabricCanvas');
-  //           canvas.deactivateAll().clear();
-  //           canvas.loadFromDatalessJSON(obj, cb, canvas.renderAll.bind(canvas));
-  //           canvas.renderAll();
-  //       }
-  //   };
-  redo=()=>{
-    console.log("redo");
-    this.fabricHistoryMods+=1;
-    // console.log(this.fabricHistory[this.fabricHistoryMods]);
+    canvas.clear();
+    var obj = this.fabricHistory[this.fabricHistoryMods];
+    canvas.loadFromDatalessJSON(obj, () => {}, canvas.renderAll.bind(canvas));
+  };
+  redo = () => {
+    console.log('redo');
+    this.fabricHistoryMods += 1;
     this.fabricDisableUndoRedo();
-        // this.fabricHistoryReplay = true;
-        // var self = this;
-        // var cb = function () {
-        //     self.fabricHistoryReplay = false;
-        // };
-        // if (this.fabricHistoryMods > 0) {
-        //     // Clear canvas
-            canvas.clear();
-            // Minus 1 to get previous item, minus the last mod and add one to go forward
-            var obj = this.fabricHistory[this.fabricHistoryMods];
-            canvas.loadFromDatalessJSON(obj, ()=>{}, canvas.renderAll.bind(canvas));
-        //     this.fabricHistoryMods -= 1;
-        // }
-  }
+    canvas.clear();
+    var obj = this.fabricHistory[this.fabricHistoryMods];
+    canvas.loadFromDatalessJSON(obj, () => {}, canvas.renderAll.bind(canvas));
+  };
+  handleKeyDown = e => {
+    console.log(e);
+  };
+  drawing = () => {
+    if (drawingObject) {
+      canvas.remove(drawingObject);
+    }
+    var canvasObject = null;
+    switch (drawType) {
+      case 'arrow': //箭头
+        canvasObject = new fabric.Path(
+          drawArrow(mouseFrom.x, mouseFrom.y, mouseTo.x, mouseTo.y, 30, 30),
+          {
+            stroke: color,
+            fill: this.state.fill,
+            strokeWidth: drawWidth,
+          }
+        );
+        break;
+      case 'line': //直线
+        canvasObject = new fabric.Line(
+          [mouseFrom.x, mouseFrom.y, mouseTo.x, mouseTo.y],
+          {
+            stroke: color,
+            strokeWidth: drawWidth,
+          }
+        );
+        break;
+      case 'dottedline': //虚线
+        canvasObject = new fabric.Line(
+          [mouseFrom.x, mouseFrom.y, mouseTo.x, mouseTo.y],
+          {
+            strokeDashArray: [3, 1],
+            stroke: color,
+            strokeWidth: drawWidth,
+          }
+        );
+        break;
+      case 'circle': //正圆
+        var left = mouseFrom.x,
+          top = mouseFrom.y;
+        var radius =
+          Math.sqrt(
+            (mouseTo.x - left) * (mouseTo.x - left) +
+              (mouseTo.y - top) * (mouseTo.y - top)
+          ) / 2;
+        canvasObject = new fabric.Circle({
+          left: left,
+          top: top,
+          stroke: color,
+          fill: this.state.fill,
+          radius: radius,
+          strokeWidth: drawWidth,
+        });
+        break;
+      case 'ellipse': //椭圆
+        var left = mouseFrom.x,
+          top = mouseFrom.y;
+        var radius =
+          Math.sqrt(
+            (mouseTo.x - left) * (mouseTo.x - left) +
+              (mouseTo.y - top) * (mouseTo.y - top)
+          ) / 2;
+        canvasObject = new fabric.Ellipse({
+          left: left,
+          top: top,
+          stroke: color,
+          fill: this.state.fill,
+          originX: 'center',
+          originY: 'center',
+          rx: Math.abs(left - mouseTo.x),
+          ry: Math.abs(top - mouseTo.y),
+          strokeWidth: drawWidth,
+        });
+        break;
+      case 'square': //TODO:正方形（后期完善）
+        break;
+      case 'rectangle': //长方形
+        var path =
+          'M ' +
+          mouseFrom.x +
+          ' ' +
+          mouseFrom.y +
+          ' L ' +
+          mouseTo.x +
+          ' ' +
+          mouseFrom.y +
+          ' L ' +
+          mouseTo.x +
+          ' ' +
+          mouseTo.y +
+          ' L ' +
+          mouseFrom.x +
+          ' ' +
+          mouseTo.y +
+          ' L ' +
+          mouseFrom.x +
+          ' ' +
+          mouseFrom.y +
+          ' z';
+        canvasObject = new fabric.Path(path, {
+          left: left,
+          top: top,
+          stroke: color,
+          strokeWidth: drawWidth,
+          fill: this.state.fill,
+        });
+        //也可以使用fabric.Rect
+        break;
+      case 'rightangle': //直角三角形
+        var path =
+          'M ' +
+          mouseFrom.x +
+          ' ' +
+          mouseFrom.y +
+          ' L ' +
+          mouseFrom.x +
+          ' ' +
+          mouseTo.y +
+          ' L ' +
+          mouseTo.x +
+          ' ' +
+          mouseTo.y +
+          ' z';
+        canvasObject = new fabric.Path(path, {
+          left: left,
+          top: top,
+          stroke: color,
+          strokeWidth: drawWidth,
+          fill: this.state.fill,
+        });
+        break;
+      case 'equilateral': //等边三角形
+        var height = mouseTo.y - mouseFrom.y;
+        canvasObject = new fabric.Triangle({
+          top: mouseFrom.y,
+          left: mouseFrom.x,
+          width: Math.sqrt(Math.pow(height, 2) + Math.pow(height / 2.0, 2)),
+          height: height,
+          stroke: color,
+          strokeWidth: drawWidth,
+          fill: this.state.fill,
+        });
+        break;
+      case 'isosceles':
+        break;
+      case 'text':
+        textbox = new fabric.Textbox('', {
+          left: mouseFrom.x - 60,
+          top: mouseFrom.y - 20,
+          width: 150,
+          fontSize: 28,
+          borderColor: '#2c2c2c',
+          fill: color,
+          hasControls: false,
+        });
+        canvas.add(textbox);
+        textbox.enterEditing();
+        textbox.hiddenTextarea.focus();
+        break;
+      case 'remove':
+        break;
+      default:
+        break;
+    }
+    if (canvasObject) {
+      // canvasObject.index = getCanvasObjectIndex();
+      canvas.add(canvasObject); //.setActiveObject(canvasObject)
+      drawingObject = canvasObject;
+    }
+  };
   render = () => {
-    // console.log(this.state);
-    // let $ = cheerio.load(this.state.html,{
-    //          xmlMode: true,
-    //          lowerCaseTags: false
-    //       });
     let filepath = path.dirname(this.state.filename);
     let li_tools = tool_types.map((item, index) => {
-      // console.log(item);
       if (index === this.state.active_tool) {
         return (
           <li
@@ -1264,18 +1122,24 @@ class Editor extends Component {
     });
     console.log('=====================================');
     console.log(this.state);
-    let btn_undo,btn_redo;
-    if (this.state.fabricUndo_disabled){
-       btn_undo=(<button onClick={this.undo} disabled={true} >undo</button>);
+    let btn_undo, btn_redo;
+    if (this.state.fabricUndo_disabled) {
+      btn_undo = (
+        <button onClick={this.undo} disabled={true}>
+          undo
+        </button>
+      );
+    } else {
+      btn_undo = <button onClick={this.undo}>undo</button>;
     }
-    else{
-      btn_undo=(<button onClick={this.undo}>undo</button>);  
-    }
-    if (this.state.fabricRedo_disabled){
-       btn_redo=(<button onClick={this.redo} disabled={true} >redo</button>);
-    }
-    else{
-      btn_redo=(<button onClick={this.redo}>redo</button>);  
+    if (this.state.fabricRedo_disabled) {
+      btn_redo = (
+        <button onClick={this.redo} disabled={true}>
+          redo
+        </button>
+      );
+    } else {
+      btn_redo = <button onClick={this.redo}>redo</button>;
     }
     return (
       <div id="root_new">
@@ -1294,7 +1158,7 @@ class Editor extends Component {
         <Browser onFileClick={this.onFileClick} />
 
         <div id="contain_edit">
-          <div style={{height: toolbar_h, backgroundColor: '#ccc' }}>
+          <div style={{ height: toolbar_h, backgroundColor: '#ccc' }}>
             <button
               style={{ margin: '10px 10px 10px 10px' }}
               onClick={this.open_click}
@@ -1342,9 +1206,17 @@ class Editor extends Component {
             <button onClick={this.delete1}>delete</button>
             <button onClick={this.zoomToFitCanvas}>fit</button>
             <button onClick={this.reset_zoom}>unfit</button>
-            <input type="range" style={{display:"inline",width:"100px"}} 
-           min="1" max="10" value={this.state.zoom} onChange={this.zoom_change} step="1" />
-           {btn_undo}{btn_redo}
+            <input
+              type="range"
+              style={{ display: 'inline', width: '100px' }}
+              min="1"
+              max="10"
+              value={this.state.zoom}
+              onChange={this.zoom_change}
+              step="1"
+            />
+            {btn_undo}
+            {btn_redo}
             <span>{this.state.filename}</span>
           </div>
           <div
@@ -1373,7 +1245,7 @@ class Editor extends Component {
                 id="c"
                 ref="canvas"
                 style={{
-                  border:"solid green 3px",
+                  border: 'solid green 3px',
                   margin: '10px 10px 10px 10px',
                   width: this.state.canvasSize.width,
                   height: this.state.canvasSize.height,
@@ -1394,18 +1266,28 @@ class Editor extends Component {
               }
             }}
           >
-            pen
+            set
           </button>
           <div
             style={{
               margin: '10 10 10 10',
               with: '250px',
-              height: '330px',
+              height: '400px',
               flexDirection: 'column',
               display: this.state.showPreview,
             }}
           >
             <div>
+              <label>background color:</label>
+              <input
+                type="color"
+                value={this.state.background_color}
+                onChange={this.background_color_change}
+              />
+            </div>
+            <div>
+              {' '}
+              <label>pen</label>
               <div id="drawing-mode-options">
                 <label>Mode:</label>
                 <select
@@ -1465,6 +1347,13 @@ class Editor extends Component {
                   id="drawing-shadow-offset"
                 />
                 <br />
+              </div>
+              <div>
+                fill
+                <SketchPicker disableAlpha={false}
+                  color={this.state.fill}
+                  onChangeComplete={this.onChangeComplete_fill}
+                />
               </div>
             </div>
           </div>
