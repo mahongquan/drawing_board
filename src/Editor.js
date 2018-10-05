@@ -28,7 +28,7 @@ var mouseFrom = {},
   canvasObjectIndex = 0,
   textbox = null;
 var drawWidth = 10; //笔触宽度
-var color = '#ffff00'; //画笔颜色
+// var color = '#ffff00'; //画笔颜色
 var drawingObject = null; //当前绘制对象
 var moveCount = 1; //绘制移动计数器
 var doDrawing = false; // 绘制状态
@@ -110,7 +110,7 @@ class Editor extends Component {
       selectValue: '',
       active_tool: 0,
       pen_width: 3,
-      color: color,
+      pen_color: "#0000ff",
       selected: null,
     };
     this.fabricHistory = [];
@@ -174,8 +174,7 @@ class Editor extends Component {
   };
   color_change = e => {
     console.log(e);
-    this.setState({ color: e.target.value });
-    color = e.target.value;
+    this.setState({ pen_color: e.target.value });
     canvas.freeDrawingBrush.color = e.target.value;
   };
   shadow_color_change = e => {
@@ -208,7 +207,7 @@ class Editor extends Component {
     }
 
     // if (canvas.freeDrawingBrush) {
-    canvas.freeDrawingBrush.color = color;
+    canvas.freeDrawingBrush.color = this.state.pen_color;
     canvas.freeDrawingBrush.width = drawWidth;
     canvas.freeDrawingBrush.shadow = new fabric.Shadow({
       blur: drawWidth || 0,
@@ -254,12 +253,10 @@ class Editor extends Component {
     });
 
     window.canvas = canvas;
-    canvas.freeDrawingBrush.color = color; //设置自由绘颜色
-    canvas.freeDrawingBrush.width = drawWidth;
     this.last_tool = 0;
     this.bind_events(this.last_tool);
     // window.addEventListener('resize', this.resize);
-    canvas.freeDrawingBrush.color = color;
+    canvas.freeDrawingBrush.color = this.state.pen_color;
     canvas.freeDrawingBrush.width = drawWidth;
     canvas.freeDrawingBrush.shadow = new fabric.Shadow({
       blur: drawWidth || 0,
@@ -275,7 +272,7 @@ class Editor extends Component {
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext('2d');
 
-        ctx.strokeStyle = this.color;
+        ctx.strokeStyle = this.state.pen_color;
         ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.moveTo(0, 5);
@@ -292,7 +289,7 @@ class Editor extends Component {
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext('2d');
 
-        ctx.strokeStyle = this.color;
+        ctx.strokeStyle = this.state.pen_color;
         ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.moveTo(5, 0);
@@ -313,7 +310,7 @@ class Editor extends Component {
           squareWidth + squareDistance;
         var ctx = patternCanvas.getContext('2d');
 
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = this.state.fill;
         ctx.fillRect(0, 0, squareWidth, squareWidth);
 
         return patternCanvas;
@@ -328,7 +325,7 @@ class Editor extends Component {
           width: squareWidth,
           height: squareWidth,
           angle: 45,
-          fill: this.color,
+          fill: this.state.fill,
         });
 
         var canvasWidth = rect.getBoundingRect().width;
@@ -649,7 +646,7 @@ class Editor extends Component {
     this.fabricHistoryMods = -1;
     this.history_len = 0;
     canvas.clear();
-    canvas.backgroundColor = 'rgb(100,100,200)';
+    canvas.backgroundColor = this.state.background_color;
   };
   handleDrag = width => {
     this.setState({ html_editor_h: width });
@@ -916,7 +913,7 @@ class Editor extends Component {
         canvasObject = new fabric.Path(
           drawArrow(mouseFrom.x, mouseFrom.y, mouseTo.x, mouseTo.y, 30, 30),
           {
-            stroke: color,
+            stroke: this.state.pen_color,
             fill: this.state.fill,
             strokeWidth: drawWidth,
           }
@@ -926,7 +923,7 @@ class Editor extends Component {
         canvasObject = new fabric.Line(
           [mouseFrom.x, mouseFrom.y, mouseTo.x, mouseTo.y],
           {
-            stroke: color,
+            stroke: this.state.pen_color,
             strokeWidth: drawWidth,
           }
         );
@@ -936,7 +933,7 @@ class Editor extends Component {
           [mouseFrom.x, mouseFrom.y, mouseTo.x, mouseTo.y],
           {
             strokeDashArray: [3, 1],
-            stroke: color,
+            stroke: this.state.pen_color,
             strokeWidth: drawWidth,
           }
         );
@@ -952,7 +949,7 @@ class Editor extends Component {
         canvasObject = new fabric.Circle({
           left: left,
           top: top,
-          stroke: color,
+          stroke: this.state.pen_color,
           fill: this.state.fill,
           radius: radius,
           strokeWidth: drawWidth,
@@ -969,7 +966,7 @@ class Editor extends Component {
         canvasObject = new fabric.Ellipse({
           left: left,
           top: top,
-          stroke: color,
+          stroke: this.state.pen_color,
           fill: this.state.fill,
           originX: 'center',
           originY: 'center',
@@ -1006,7 +1003,7 @@ class Editor extends Component {
         canvasObject = new fabric.Path(path, {
           left: left,
           top: top,
-          stroke: color,
+          stroke: this.state.pen_color,
           strokeWidth: drawWidth,
           fill: this.state.fill,
         });
@@ -1030,7 +1027,7 @@ class Editor extends Component {
         canvasObject = new fabric.Path(path, {
           left: left,
           top: top,
-          stroke: color,
+          stroke: this.state.pen_color,
           strokeWidth: drawWidth,
           fill: this.state.fill,
         });
@@ -1042,7 +1039,7 @@ class Editor extends Component {
           left: mouseFrom.x,
           width: Math.sqrt(Math.pow(height, 2) + Math.pow(height / 2.0, 2)),
           height: height,
-          stroke: color,
+          stroke: this.state.pen_color,
           strokeWidth: drawWidth,
           fill: this.state.fill,
         });
@@ -1056,7 +1053,7 @@ class Editor extends Component {
           width: 150,
           fontSize: 28,
           borderColor: '#2c2c2c',
-          fill: color,
+          fill: this.state.fill,
           hasControls: false,
         });
         canvas.add(textbox);
@@ -1307,7 +1304,7 @@ class Editor extends Component {
                 <label>Line color:</label>
                 <input
                   type="color"
-                  value={this.state.color}
+                  value={this.state.pen_color}
                   onChange={this.color_change}
                   id="drawing-color"
                 />
