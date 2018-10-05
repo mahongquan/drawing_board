@@ -281,6 +281,8 @@ class Editor extends Component {
       this.setState({ show_about: true });
     });
     this.state = {
+      fabricUndo_disabled:true,
+      fabricRedo_disabled:true,
       zoom:1,
       mode: 'Pencil',
       shadow_color: '#00FF00',
@@ -301,8 +303,10 @@ class Editor extends Component {
       color: color,
       selected: null,
     };
-    this.cssEditor = React.createRef();
-    this.htmlEditor = React.createRef();
+     this.fabricHistory = [];
+      this.fabricHistoryMods = -1;
+      this.fabricHistoryReplay = false;
+      this.history_len=0;
   }
   reset_zoom = () => {
     canvas.setZoom(1.0);
@@ -548,7 +552,57 @@ class Editor extends Component {
       this.texturePatternBrush = new fabric.PatternBrush(canvas);
       this.texturePatternBrush.source = img;
     }
+    // canvas.on('object:modified',(e)=> {
+    //             if (this.fabricHistoryReplay === false) {
+    //                 this.fabricSaveCanvasToObject();
+    //             }
+    //         });
+    // canvas.on('object:added',(e)=>{
+    //             if (this.fabricHistoryReplay === false) {
+    //                 this.fabricSaveCanvasToObject();
+    //             }
+    //         });
+    // canvas.on('object:removed',(e)=>{
+    //             if (this.fabricHistoryReplay === false) {
+    //                 this.fabricSaveCanvasToObject();
+    //             }
+    //         });
   };
+  fabricDisableUndoRedo = () =>{
+        var self = this;
+        var mods = this.fabricHistoryMods;
+        var hist = this.history_len;
+        // No redo steps left
+        if ( hist>0 && mods<hist-1) {
+            this.setState({fabricRedo_disabled: false});
+        }
+        else {
+            this.setState({fabricRedo_disabled: true});
+        }
+        // No undo steps left or no history
+        if (mods<-1 || hist === 0) {
+          this.setState({fabricUndo_disabled: true});
+        }
+        else {
+          this.setState({fabricUndo_disabled: false});
+        }
+    }
+  fabricSaveCanvasToObject=()=>{
+        var obj = JSON.stringify(canvas.toDatalessJSON());
+        if(obj===this.fabricHistory[this.fabricHistoryMods]) return;//not change
+        // Reset mods due to new action
+        this.fabricHistoryMods +=1;
+        // if (this.fabricHistory.length === 6) {
+        //     this.fabricHistory.shift();
+        //     this.fabricHistory.push(obj);
+        // }
+        // else if (this.fabricHistory.length < 6) {
+        this.fabricHistory[this.fabricHistoryMods]=obj;
+        this.history_len=this.fabricHistoryMods+1;
+        // }
+        // Disable or enable buttons
+        this.fabricDisableUndoRedo();
+  }
   unbind_events = index => {
     if (index === 0) {
       this.unbind_select();
@@ -639,7 +693,7 @@ class Editor extends Component {
         mouseFrom.y = xy.y;
         doDrawing = true;
       });
-      canvas.on('mouse:up', function(options) {
+      canvas.on('mouse:up', (options)=>{
         var xy = transformMouse(options.e.offsetX, options.e.offsetY);
         mouseTo.x = xy.x;
         mouseTo.y = xy.y;
@@ -647,6 +701,7 @@ class Editor extends Component {
         drawingObject = null;
         moveCount = 1;
         doDrawing = false;
+        this.fabricSaveCanvasToObject();
       });
       canvas.on('mouse:move', function(options) {
         if (moveCount % 2 && !doDrawing) {
@@ -867,7 +922,10 @@ class Editor extends Component {
   };
   click_tool = index => {
     if (index === this.last_tool) return;
-    this.setState({ active_tool: index });
+    
+    this.setState({ active_tool: index },()=>{
+      this.fabricSaveCanvasToObject();
+    });
     drawType = tool_types[index]; //jQuery(this).attr("data-type");
     console.log(index);
     console.log(drawType);
@@ -1090,6 +1148,72 @@ class Editor extends Component {
     active.setSubscript();
     canvas.requestRenderAll();
   };
+  undo=()=>{
+    console.log("undo");
+    this.fabricHistoryMods-=1;
+    // console.log(this.fabricHistory[this.fabricHistoryMods]);
+    this.fabricDisableUndoRedo();
+        // this.fabricHistoryReplay = true;
+        // var self = this;
+        // var cb = function () {
+        //     self.fabricHistoryReplay = false;
+        // };
+        // if (this.fabricHistoryMods < this.fabricHistory.length) {
+        //     // if (this.fabricHistoryMods !== 5) {
+        //         // Clear canvas
+                canvas.clear();
+                var obj = this.fabricHistory[this.fabricHistoryMods];
+                canvas.loadFromDatalessJSON(obj, ()=>{}, canvas.renderAll.bind(canvas));
+        //         this.fabricHistoryMods += 1;
+        //     // }
+        // }
+  }
+  // fabricSaveLocalStorage = () =>{
+  //       if (localStorage) {
+  //           var obj = JSON.stringify(canvas.toDatalessJSON());
+  //           localStorage.setItem('fabricCanvas', obj);
+  //           canvas.renderAll();
+  //       }
+  //   };
+  //   /**
+  //    * Load the canvas
+  //    */
+  //   fabricLoadLocalStorage =  () =>{
+  //       var self = this;
+  //       var obj;
+  //       var cb = function () {
+  //           self.fabricHistory = [];
+  //           self.fabricHistory.push(obj);
+  //           self.fabricHistoryMods = 0;
+  //           self.fabricHistoryReplay = false;
+  //           self.fabricDisableUndoRedo();
+  //       };
+  //       if (localStorage) {
+  //           obj = localStorage.getItem('fabricCanvas');
+  //           canvas.deactivateAll().clear();
+  //           canvas.loadFromDatalessJSON(obj, cb, canvas.renderAll.bind(canvas));
+  //           canvas.renderAll();
+  //       }
+  //   };
+  redo=()=>{
+    console.log("redo");
+    this.fabricHistoryMods+=1;
+    // console.log(this.fabricHistory[this.fabricHistoryMods]);
+    this.fabricDisableUndoRedo();
+        // this.fabricHistoryReplay = true;
+        // var self = this;
+        // var cb = function () {
+        //     self.fabricHistoryReplay = false;
+        // };
+        // if (this.fabricHistoryMods > 0) {
+        //     // Clear canvas
+            canvas.clear();
+            // Minus 1 to get previous item, minus the last mod and add one to go forward
+            var obj = this.fabricHistory[this.fabricHistoryMods];
+            canvas.loadFromDatalessJSON(obj, ()=>{}, canvas.renderAll.bind(canvas));
+        //     this.fabricHistoryMods -= 1;
+        // }
+  }
   render = () => {
     // console.log(this.state);
     // let $ = cheerio.load(this.state.html,{
@@ -1134,6 +1258,19 @@ class Editor extends Component {
     });
     console.log('=====================================');
     console.log(this.state);
+    let btn_undo,btn_redo;
+    if (this.state.fabricUndo_disabled){
+       btn_undo=(<button onClick={this.undo} disabled={true} >undo</button>);
+    }
+    else{
+      btn_undo=(<button onClick={this.undo}>undo</button>);  
+    }
+    if (this.state.fabricRedo_disabled){
+       btn_redo=(<button onClick={this.redo} disabled={true} >redo</button>);
+    }
+    else{
+      btn_redo=(<button onClick={this.redo}>redo</button>);  
+    }
     return (
       <div id="root_new">
         <DlgAbout
@@ -1199,9 +1336,10 @@ class Editor extends Component {
             <button onClick={this.delete1}>delete</button>
             <button onClick={this.zoomToFitCanvas}>fit</button>
             <button onClick={this.reset_zoom}>unfit</button>
-            <input type="range" style={{width:"100px"}} 
+            <input type="range" style={{display:"inline",width:"100px"}} 
            min="1" max="10" value={this.state.zoom} onChange={this.zoom_change} step="1" />
-            <div>{this.state.filename}</div>
+           {btn_undo}{btn_redo}
+            <span>{this.state.filename}</span>
           </div>
           <div
             style={{
