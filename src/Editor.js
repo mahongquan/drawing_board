@@ -291,7 +291,7 @@ class Editor extends Component {
       show_about: false,
       show_color: false,
       show_prop: 'none',
-      canvasSize: { width: 900, height: 900 },
+      canvasSize: { width: 1000, height: 1000 },
       previewSize: { width: '220px', height: '300px' },
       showPreview: 'none',
       html_editor_h: 600,
@@ -1373,7 +1373,8 @@ class Editor extends Component {
                 id="c"
                 ref="canvas"
                 style={{
-                  margin: '30px 30px 30px 30px',
+                  border:"solid green 3px",
+                  margin: '10px 10px 10px 10px',
                   width: this.state.canvasSize.width,
                   height: this.state.canvasSize.height,
                 }}
