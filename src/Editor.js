@@ -291,7 +291,7 @@ class Editor extends Component {
       show_about: false,
       show_color: false,
       show_prop: 'none',
-      canvasSize: { width: '1000px', height: '1000px' },
+      canvasSize: { width: 900, height: 900 },
       previewSize: { width: '220px', height: '300px' },
       showPreview: 'none',
       html_editor_h: 600,
@@ -311,7 +311,7 @@ class Editor extends Component {
   reset_zoom = () => {
     canvas.setZoom(1.0);
     let now_center = canvas.getVpCenter();
-    canvas.relativePan({ x: now_center.x - 500, y: now_center.y - 500 });
+    canvas.relativePan({ x: now_center.x - this.state.canvasSize.width/2, y: now_center.y - this.state.canvasSize.height/2 });
   };
   zoomToFitCanvas = () => {
     //遍历所有对对象，获取最小坐标，最大坐标
@@ -773,11 +773,15 @@ class Editor extends Component {
         if (path.parse(res[0]).ext === '.svg') {
           fabric.loadSVGFromString(content, function(objects, options) {
             var obj = fabric.util.groupSVGElements(objects, options);
-            canvas.clear();
-            this.reset_zoom();
+            canvas.clear();  //reset canvas
+            this.fabricHistoryMods=-1;//reset history
+            this.history_len=0;
+            this.reset_zoom();   //reset zoom
             canvas.add(obj).renderAll();
           });
         } else {
+          this.fabricHistoryMods=-1;
+          this.history_len=0;
           this.reset_zoom();
           canvas.loadFromJSON(content);
         }
@@ -908,6 +912,8 @@ class Editor extends Component {
     this.setState({
       filename: ''
     });
+    this.fabricHistoryMods=-1;
+    this.history_len=0;
     canvas.clear();
     canvas.backgroundColor = 'rgb(100,100,200)';
   };
