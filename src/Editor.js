@@ -27,15 +27,11 @@ var mouseFrom = {},
   drawType = null,
   canvasObjectIndex = 0,
   textbox = null;
-var drawWidth = 10; //笔触宽度
-// var color = '#ffff00'; //画笔颜色
 var drawingObject = null; //当前绘制对象
-var moveCount = 1; //绘制移动计数器
+// var moveCount = 1; //绘制移动计数器
 var doDrawing = false; // 绘制状态
 let canvas;
 let _clipboard;
-
-//绘画方法
 
 //绘制箭头方法
 function drawArrow(fromX, fromY, toX, toY, theta, headlen) {
@@ -90,8 +86,8 @@ class Editor extends Component {
     });
     this.state = {
       background_color: 'rgba(23,23,23,0.9)',
-      fabricUndo_disabled: true,
-      fabricRedo_disabled: true,
+      undo_disabled: true,
+      redo_disabled: true,
       fill:"rgba(100,200,123,0.5)",
       zoom: 1,
       mode: 'Pencil',
@@ -102,7 +98,6 @@ class Editor extends Component {
       show_color: false,
       show_prop: 'none',
       canvasSize: { width: 1000, height: 1000 },
-      previewSize: { width: '220px', height: '300px' },
       showPreview: 'none',
       html_editor_h: 600,
       edit_width: 800,
@@ -113,8 +108,8 @@ class Editor extends Component {
       pen_color: "#0000ff",
       selected: null,
     };
-    this.fabricHistory = [];
-    this.fabricHistoryMods = -1;
+    this.history = [];
+    this.history_index = -1;
     this.fabricHistoryReplay = false;
     this.history_len = 0;
   }
@@ -208,9 +203,9 @@ class Editor extends Component {
 
     // if (canvas.freeDrawingBrush) {
     canvas.freeDrawingBrush.color = this.state.pen_color;
-    canvas.freeDrawingBrush.width = drawWidth;
+    canvas.freeDrawingBrush.width = this.state.pen_width;
     canvas.freeDrawingBrush.shadow = new fabric.Shadow({
-      blur: drawWidth || 0,
+      blur: this.state.pen_width || 0,
       offsetX: 0,
       offsetY: 0,
       affectStroke: true,
@@ -257,9 +252,9 @@ class Editor extends Component {
     this.bind_events(this.last_tool);
     // window.addEventListener('resize', this.resize);
     canvas.freeDrawingBrush.color = this.state.pen_color;
-    canvas.freeDrawingBrush.width = drawWidth;
+    canvas.freeDrawingBrush.width = this.state.pen_width;
     canvas.freeDrawingBrush.shadow = new fabric.Shadow({
-      blur: drawWidth || 0,
+      blur: this.state.pen_width || 0,
       offsetX: 0,
       offsetY: 0,
       affectStroke: true,
@@ -347,30 +342,30 @@ class Editor extends Component {
       this.texturePatternBrush.source = img;
     }
   };
-  fabricDisableUndoRedo = () => {
+  disableUndoRedo = () => {
     var self = this;
-    var mods = this.fabricHistoryMods;
+    var mods = this.history_index;
     var hist = this.history_len;
     // No redo steps left
     if (hist > 0 && mods < hist - 1) {
-      this.setState({ fabricRedo_disabled: false });
+      this.setState({ redo_disabled: false });
     } else {
-      this.setState({ fabricRedo_disabled: true });
+      this.setState({ redo_disabled: true });
     }
     // No undo steps left or no history
     if (mods < -1 || hist === 0) {
-      this.setState({ fabricUndo_disabled: true });
+      this.setState({ undo_disabled: true });
     } else {
-      this.setState({ fabricUndo_disabled: false });
+      this.setState({ undo_disabled: false });
     }
   };
-  fabricSaveCanvasToObject = () => {
+  save_history = () => {
     var obj = JSON.stringify(canvas.toDatalessJSON());
-    if (obj === this.fabricHistory[this.fabricHistoryMods]) return; //not change
-    this.fabricHistoryMods += 1;
-    this.fabricHistory[this.fabricHistoryMods] = obj;
-    this.history_len = this.fabricHistoryMods + 1;
-    this.fabricDisableUndoRedo();
+    if (obj === this.history[this.history_index]) return; //not change
+    this.history_index += 1;
+    this.history[this.history_index] = obj;
+    this.history_len = this.history_index + 1;
+    this.disableUndoRedo();
   };
   unbind_events = index => {
     if (index === 0) {
@@ -464,16 +459,17 @@ class Editor extends Component {
         mouseTo.y = xy.y;
         // drawing();
         drawingObject = null;
-        moveCount = 1;
+        // moveCount = 1;
         doDrawing = false;
-        this.fabricSaveCanvasToObject();
+        this.save_history();
       });
       canvas.on('mouse:move', (options)=> {
-        if (moveCount % 2 && !doDrawing) {
+        // if (moveCount % 2 && !doDrawing) {
+        if(!doDrawing){
           //减少绘制频率
           return;
         }
-        moveCount++;
+        // moveCount++;
         var xy = options.absolutePointer;//transformMouse(options.e.offsetX, options.e.offsetY);
         mouseTo.x = xy.x;
         mouseTo.y = xy.y;
@@ -539,13 +535,13 @@ class Editor extends Component {
           fabric.loadSVGFromString(content, function(objects, options) {
             var obj = fabric.util.groupSVGElements(objects, options);
             canvas.clear(); //reset canvas
-            this.fabricHistoryMods = -1; //reset history
+            this.history_index = -1; //reset history
             this.history_len = 0;
             this.reset_zoom(); //reset zoom
             canvas.add(obj).renderAll();
           });
         } else {
-          this.fabricHistoryMods = -1;
+          this.history_index = -1;
           this.history_len = 0;
           this.reset_zoom();
           canvas.loadFromJSON(content);
@@ -606,7 +602,7 @@ class Editor extends Component {
         if (res) {
           this.anim();
           this.setState({ filename: res });
-          this.fabricHistoryMods = -1;
+          this.history_index = -1;
           this.history_len = 0;
 
           if (path.parse(res).ext === '.svg') {
@@ -621,7 +617,7 @@ class Editor extends Component {
   save_click = () => {
     if (this.state.filename != '') {
       this.anim();
-      this.fabricHistoryMods = -1;
+      this.history_index = -1;
       this.history_len = 0;
 
       if (path.parse(this.state.filename).ext === '.svg') {
@@ -643,7 +639,7 @@ class Editor extends Component {
     this.setState({
       filename: '',
     });
-    this.fabricHistoryMods = -1;
+    this.history_index = -1;
     this.history_len = 0;
     canvas.clear();
     canvas.backgroundColor = this.state.background_color;
@@ -661,7 +657,7 @@ class Editor extends Component {
     if (index === this.last_tool) return;
 
     this.setState({ active_tool: index }, () => {
-      this.fabricSaveCanvasToObject();
+      this.save_history();
     });
     drawType = tool_types[index]; //jQuery(this).attr("data-type");
     console.log(index);
@@ -699,8 +695,8 @@ class Editor extends Component {
   };
   pen_width_change = e => {
     this.setState({ pen_width: parseInt(e.target.value, 10) }, () => {
-      drawWidth = this.state.pen_width;
-      canvas.freeDrawingBrush.width = drawWidth;
+      // drawWidth = this.state.pen_width;
+      canvas.freeDrawingBrush.width = this.state.pen_width;
     });
   };
   anim_canvas = () => {
@@ -886,18 +882,20 @@ class Editor extends Component {
   };
   undo = () => {
     console.log('undo');
-    this.fabricHistoryMods -= 1;
-    this.fabricDisableUndoRedo();
+    if(this.history_index===-1) return;
+    this.history_index -= 1;
+    this.disableUndoRedo();
     canvas.clear();
-    var obj = this.fabricHistory[this.fabricHistoryMods];
+    var obj = this.history[this.history_index];
     canvas.loadFromDatalessJSON(obj, () => {}, canvas.renderAll.bind(canvas));
   };
   redo = () => {
     console.log('redo');
-    this.fabricHistoryMods += 1;
-    this.fabricDisableUndoRedo();
+    if(this.history_index===this.history_len-1) return;
+    this.history_index += 1;
+    this.disableUndoRedo();
     canvas.clear();
-    var obj = this.fabricHistory[this.fabricHistoryMods];
+    var obj = this.history[this.history_index];
     canvas.loadFromDatalessJSON(obj, () => {}, canvas.renderAll.bind(canvas));
   };
   handleKeyDown = e => {
@@ -915,7 +913,7 @@ class Editor extends Component {
           {
             stroke: this.state.pen_color,
             fill: this.state.fill,
-            strokeWidth: drawWidth,
+            strokeWidth: this.state.pen_width,
           }
         );
         break;
@@ -924,7 +922,7 @@ class Editor extends Component {
           [mouseFrom.x, mouseFrom.y, mouseTo.x, mouseTo.y],
           {
             stroke: this.state.pen_color,
-            strokeWidth: drawWidth,
+            strokeWidth: this.state.pen_width,
           }
         );
         break;
@@ -934,7 +932,7 @@ class Editor extends Component {
           {
             strokeDashArray: [3, 1],
             stroke: this.state.pen_color,
-            strokeWidth: drawWidth,
+            strokeWidth: this.state.pen_width,
           }
         );
         break;
@@ -945,14 +943,14 @@ class Editor extends Component {
           Math.sqrt(
             (mouseTo.x - left) * (mouseTo.x - left) +
               (mouseTo.y - top) * (mouseTo.y - top)
-          ) / 2;
+          );
         canvasObject = new fabric.Circle({
-          left: left,
-          top: top,
+          left: left-radius,
+          top: top-radius,
           stroke: this.state.pen_color,
           fill: this.state.fill,
           radius: radius,
-          strokeWidth: drawWidth,
+          strokeWidth: this.state.pen_width,
         });
         break;
       case 'ellipse': //椭圆
@@ -972,7 +970,7 @@ class Editor extends Component {
           originY: 'center',
           rx: Math.abs(left - mouseTo.x),
           ry: Math.abs(top - mouseTo.y),
-          strokeWidth: drawWidth,
+          strokeWidth: this.state.pen_width,
         });
         break;
       case 'square': //TODO:正方形（后期完善）
@@ -1004,7 +1002,7 @@ class Editor extends Component {
           left: left,
           top: top,
           stroke: this.state.pen_color,
-          strokeWidth: drawWidth,
+          strokeWidth: this.state.pen_width,
           fill: this.state.fill,
         });
         //也可以使用fabric.Rect
@@ -1028,7 +1026,7 @@ class Editor extends Component {
           left: left,
           top: top,
           stroke: this.state.pen_color,
-          strokeWidth: drawWidth,
+          strokeWidth: this.state.pen_width,
           fill: this.state.fill,
         });
         break;
@@ -1040,7 +1038,7 @@ class Editor extends Component {
           width: Math.sqrt(Math.pow(height, 2) + Math.pow(height / 2.0, 2)),
           height: height,
           stroke: this.state.pen_color,
-          strokeWidth: drawWidth,
+          strokeWidth: this.state.pen_width,
           fill: this.state.fill,
         });
         break;
@@ -1071,6 +1069,31 @@ class Editor extends Component {
       drawingObject = canvasObject;
     }
   };
+  add_image=()=>{
+
+    var dialog = electron.remote.dialog;
+    dialog.showOpenDialog(
+      {
+        defaultPath: path.resolve('./css_examples'),
+        properties: ['openFile'],
+        filters: [
+          { name: '*.png', extensions: ['png'] },
+          { name: '*.jpg', extensions: ['jpeg'] },
+          { name: '*', extensions: ['*'] },
+        ],
+      },
+      res => {
+        if (!res) return;
+        // const cheerio = require('cheerio');
+        fabric.Image.fromURL(res[0], (oImg)=>{
+          // scale image down, and flip it, before adding it onto canvas
+          // window.img=oImg;
+          // console.log(oImg);
+          canvas.add(oImg);
+        });
+      }
+    );
+  }
   render = () => {
     let filepath = path.dirname(this.state.filename);
     let li_tools = tool_types.map((item, index) => {
@@ -1110,7 +1133,7 @@ class Editor extends Component {
     console.log('=====================================');
     console.log(this.state);
     let btn_undo, btn_redo;
-    if (this.state.fabricUndo_disabled) {
+    if (this.state.undo_disabled) {
       btn_undo = (
         <button onClick={this.undo} disabled={true}>
           undo
@@ -1119,7 +1142,7 @@ class Editor extends Component {
     } else {
       btn_undo = <button onClick={this.undo}>undo</button>;
     }
-    if (this.state.fabricRedo_disabled) {
+    if (this.state.redo_disabled) {
       btn_redo = (
         <button onClick={this.redo} disabled={true}>
           redo
@@ -1193,6 +1216,7 @@ class Editor extends Component {
             <button onClick={this.delete1}>delete</button>
             <button onClick={this.zoomToFitCanvas}>fit</button>
             <button onClick={this.reset_zoom}>unfit</button>
+            <button onClick={this.add_image}>image</button>
             <input
               type="range"
               style={{ display: 'inline', width: '100px' }}
@@ -1275,10 +1299,10 @@ class Editor extends Component {
             <div>
               {' '}
               <label>pen</label>
-              <div id="drawing-mode-options">
+              <div >
                 <label>Mode:</label>
                 <select
-                  id="drawing-mode-selector"
+            
                   value={this.state.mode}
                   onChange={this.mode_change}
                 >
@@ -1297,7 +1321,7 @@ class Editor extends Component {
                 <input
                   value={this.state.pen_width}
                   onChange={this.pen_width_change}
-                  id="drawing-line-width"
+         
                 />
                 <br />
 
@@ -1306,7 +1330,7 @@ class Editor extends Component {
                   type="color"
                   value={this.state.pen_color}
                   onChange={this.color_change}
-                  id="drawing-color"
+
                 />
                 <br />
 
@@ -1315,7 +1339,7 @@ class Editor extends Component {
                   type="color"
                   value={this.state.shadow_color}
                   onChange={this.shadow_color_change}
-                  id="drawing-shadow-color"
+
                 />
                 <br />
 
@@ -1323,7 +1347,7 @@ class Editor extends Component {
                 <input
                   value={this.state.shadow_width}
                   onChange={this.shadow_width_change}
-                  id="drawing-shadow-width"
+
                 />
                 <br />
 
@@ -1331,7 +1355,7 @@ class Editor extends Component {
                 <input
                   value={this.state.shadow_offset}
                   onChange={this.shadow_offset_change}
-                  id="drawing-shadow-offset"
+ 
                 />
                 <br />
               </div>
