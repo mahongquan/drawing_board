@@ -2,9 +2,13 @@
   "name": "electron-quick-start",
   "version": "1.0.0",
   "description": "A minimal Electron application",
+  "homepage": ".",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dev": "electron . --local --dev",
+    "server": "react-scripts start",
+    "build": "react-scripts build"
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
@@ -18,5 +22,12 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "electron": "~1.8.2"
+  },
+  "dependencies": {
+    "react": "^16.5.2",
+    "react-bootstrap": "^0.32.4",
+    "react-color": "^2.14.1",
+    "react-dom": "^16.5.2",
+    "react-scripts": "^2.0.4"
   }
 }
