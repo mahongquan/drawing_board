@@ -1,2 +1,0 @@
-cannot exit after drag drop
-drag drop do not show new filename
