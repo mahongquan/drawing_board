@@ -7,6 +7,14 @@ import MyFs from './MyFs';
 import { PhotoshopPicker,SketchPicker,AlphaPicker } from 'react-color';
 import PropEdit from './PropEdit';
 import sprintf from 'sprintf';
+function dataURLtoBlob(dataurl) {
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return u8arr;//new Blob([u8arr], {type:mime});
+}
 var panning = false;
 const tool_types = [
   'move',
@@ -97,7 +105,7 @@ class Editor extends Component {
       show_about: false,
       show_color: false,
       show_prop: 'none',
-      canvasSize: { width: 1000, height: 1000 },
+      canvasSize: { width: 1000, height: 700 },
       showPreview: 'none',
       html_editor_h: 600,
       edit_width: 800,
@@ -122,8 +130,8 @@ class Editor extends Component {
     canvas.setZoom(1.0);
     let now_center = canvas.getVpCenter();
     canvas.relativePan({
-      x: now_center.x - this.state.canvasSize.width / 2,
-      y: now_center.y - this.state.canvasSize.height / 2,
+      x: now_center.x - canvas.getWidth() / 2,
+      y: now_center.y - canvas.getHeight() / 2,
     });
   };
   zoomToFitCanvas = () => {
@@ -235,6 +243,21 @@ class Editor extends Component {
   //     }
   //   );
   // };
+  hline_func=()=> {
+        var patternCanvas = fabric.document.createElement('canvas');
+        patternCanvas.width = patternCanvas.height = 10;
+        var ctx = patternCanvas.getContext('2d');
+
+        ctx.strokeStyle = pen_color;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(5, 0);
+        ctx.lineTo(5, 10);
+        ctx.closePath();
+        ctx.stroke();
+
+        return patternCanvas;
+  };
   componentDidMount = () => {
     console.log(canvas);
     canvas = new fabric.Canvas('c', {
@@ -262,12 +285,12 @@ class Editor extends Component {
     });
     if (fabric.PatternBrush) {
       this.vLinePatternBrush = new fabric.PatternBrush(canvas);
-      this.vLinePatternBrush.getPatternSrc = function() {
+      this.vLinePatternBrush.getPatternSrc =function (){
         var patternCanvas = fabric.document.createElement('canvas');
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext('2d');
 
-        ctx.strokeStyle = this.state.pen_color;
+        ctx.strokeStyle =this.color;
         ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.moveTo(0, 5);
@@ -279,12 +302,12 @@ class Editor extends Component {
       };
 
       this.hLinePatternBrush = new fabric.PatternBrush(canvas);
-      this.hLinePatternBrush.getPatternSrc = function() {
+      this.hLinePatternBrush.getPatternSrc = function(){
         var patternCanvas = fabric.document.createElement('canvas');
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext('2d');
 
-        ctx.strokeStyle = this.state.pen_color;
+        ctx.strokeStyle = this.color;
         ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.moveTo(5, 0);
@@ -293,10 +316,11 @@ class Editor extends Component {
         ctx.stroke();
 
         return patternCanvas;
-      };
+
+      }
 
       this.squarePatternBrush = new fabric.PatternBrush(canvas);
-      this.squarePatternBrush.getPatternSrc = function() {
+      this.squarePatternBrush.getPatternSrc = ()=> {
         var squareWidth = 10,
           squareDistance = 2;
 
@@ -305,22 +329,23 @@ class Editor extends Component {
           squareWidth + squareDistance;
         var ctx = patternCanvas.getContext('2d');
 
-        ctx.fillStyle = this.state.fill;
+        ctx.fillStyle = this.color;
         ctx.fillRect(0, 0, squareWidth, squareWidth);
 
         return patternCanvas;
       };
 
       this.diamondPatternBrush = new fabric.PatternBrush(canvas);
-      this.diamondPatternBrush.getPatternSrc = function() {
+      this.diamondPatternBrush.getPatternSrc = function(){
         var squareWidth = 10,
           squareDistance = 5;
         var patternCanvas = fabric.document.createElement('canvas');
+        console.log(this);
         var rect = new fabric.Rect({
           width: squareWidth,
           height: squareWidth,
           angle: 45,
-          fill: this.state.fill,
+          fill: this.color
         });
 
         var canvasWidth = rect.getBoundingRect().width;
@@ -446,7 +471,7 @@ class Editor extends Component {
       this.bind_select();
     } else {
       //绑定画板事件
-      canvas.on('mouse:down', function(options) {
+      canvas.on('mouse:down',(options)=>{
         console.log(options);
         var xy = options.absolutePointer;//transformMouse(options.e.offsetX, options.e.offsetY);
         mouseFrom.x = xy.x;
@@ -594,7 +619,7 @@ class Editor extends Component {
         filters: [
           { name: '*.fabric.json', extensions: ['fabric.json'] },
           { name: '*.svg', extensions: ['svg'] },
-          { name: '*.txt', extensions: ['text'] },
+          { name: '*.png', extensions: ['png'] },
           { name: '*', extensions: ['*'] },
         ],
       },
@@ -607,6 +632,10 @@ class Editor extends Component {
 
           if (path.parse(res).ext === '.svg') {
             fs.writeFileSync(res, this.genOutSvg());
+          }
+          else if(path.parse(res).ext === '.png') {
+            var blob = dataURLtoBlob(canvas.toDataURL());
+            fs.writeFileSync(res, blob);
           } else {
             fs.writeFileSync(res, this.genOut());
           }
@@ -1153,6 +1182,7 @@ class Editor extends Component {
     }
     return (
       <div id="root_new">
+      
         <DlgAbout
           showModal={this.state.show_about}
           closeModal={() => {
@@ -1257,7 +1287,7 @@ class Editor extends Component {
                 ref="canvas"
                 style={{
                   border: 'solid green 3px',
-                  margin: '10px 10px 10px 10px',
+                  margin: '0px 10px 10px 10px',
                   width: this.state.canvasSize.width,
                   height: this.state.canvasSize.height,
                 }}

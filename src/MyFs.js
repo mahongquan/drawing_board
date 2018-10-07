@@ -6,9 +6,9 @@ const decoder = new StringDecoder('utf8');
 //console.log(path)
 var app_root = path.resolve('.');
 //var  app_root=path.normalize(".")
-let path_obj = path.parse(app_root);
-app_root = path_obj.root;
-console.log(app_root);
+// let path_obj = path.parse(app_root);
+// app_root = path_obj.root;
+
 function myPathObj(p) {
   let stat = null;
   try {
