@@ -4,8 +4,9 @@ import DlgColor from './DlgColor';
 import data from './Data';
 import Browser from './Browser2';
 import MyFs from './MyFs';
-import { PhotoshopPicker,SketchPicker,AlphaPicker } from 'react-color';
+import { SketchPicker } from 'react-color';
 import PropEdit from './PropEdit';
+import InputColor from './InputColor';
 import sprintf from 'sprintf';
 function dataURLtoBlob(dataurl) {
     var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
@@ -77,7 +78,7 @@ class Editor extends Component {
     super();
     data.getconfig();
     ipcRenderer.on('request_close', () => {
-      data.saveconfig();
+      data.saveconfig(this.state);
       ipcRenderer.send('close');
     });
     ipcRenderer.on('save', () => {
@@ -92,39 +93,30 @@ class Editor extends Component {
     ipcRenderer.on('about', () => {
       this.setState({ show_about: true });
     });
-    this.state = {
-      background_color: 'rgba(23,23,23,0.9)',
-      undo_disabled: true,
-      redo_disabled: true,
-      fill:"rgba(100,200,123,0.5)",
-      zoom: 1,
-      mode: 'Pencil',
-      shadow_color: '#00FF00',
-      shadow_width: 10,
-      shadow_offset: 4,
-      show_about: false,
-      show_color: false,
-      show_prop: 'none',
-      canvasSize: { width: 1000, height: 700 },
-      showPreview: 'none',
-      html_editor_h: 600,
-      edit_width: 800,
-      filename: '',
-      selectValue: '',
-      active_tool: 0,
-      pen_width: 3,
-      pen_color: "#0000ff",
-      selected: null,
-    };
+    data.config.state.filename="";
+    this.state = data.config.state;
     this.history = [];
     this.history_index = -1;
     this.fabricHistoryReplay = false;
     this.history_len = 0;
   }
-  background_color_change = e => {
-    canvas.backgroundColor = e.target.value;
+  width_change=(e)=>{
+    let w=parseInt(e.target.value,10) || 10;
+    canvas.setWidth(w);
+    this.setState({canvasSize:{width:w,height:this.state.canvasSize.height}});
+  }
+  height_change=(e)=>{
+    let w=parseInt(e.target.value,10) || 10;
+    canvas.setHeight(w);
+    this.setState({canvasSize:{width:this.state.canvasSize.width,height:w}});
+  }
+  background_color_change = (s) => {
+    // console.log("background_color_change");
+    // console.log(vcolor);
+    // let s=sprintf("rgba(%d,%d,%d,%f)",vcolor.rgb.r,vcolor.rgb.g,vcolor.rgb.b,vcolor.rgb.a);
+    canvas.backgroundColor = s;
     canvas.renderAll();
-    this.setState({ background_color: e.target.value });
+    this.setState({ background_color: s });
   };
   reset_zoom = () => {
     canvas.setZoom(1.0);
@@ -177,12 +169,12 @@ class Editor extends Component {
   };
   color_change = e => {
     console.log(e);
-    this.setState({ pen_color: e.target.value });
-    canvas.freeDrawingBrush.color = e.target.value;
+    this.setState({ pen_color: e });
+    canvas.freeDrawingBrush.color = e;
   };
   shadow_color_change = e => {
-    this.setState({ shadow_color: e.target.value });
-    canvas.freeDrawingBrush.shadow.color = e.target.value;
+    this.setState({ shadow_color: e});
+    canvas.freeDrawingBrush.shadow.color = e;
   };
   shadow_width_change = e => {
     this.setState({ shadow_width: parseInt(e.target.value, 10) });
@@ -221,9 +213,9 @@ class Editor extends Component {
     });
     // }
   };
-  onChangeComplete_fill = vcolor => {
-    console.log(vcolor);
-    let s=sprintf("rgba(%d,%d,%d,%f)",vcolor.rgb.r,vcolor.rgb.g,vcolor.rgb.b,vcolor.rgb.a);
+  onChange_fill = s => {
+    // console.log(vcolor);
+    // let s=sprintf("rgba(%d,%d,%d,%f)",vcolor.rgb.r,vcolor.rgb.g,vcolor.rgb.b,vcolor.rgb.a);
     this.setState({ fill: s });
     // color = vcolor.hex;
     // canvas.freeDrawingBrush.color = vcolor.hex;
@@ -262,8 +254,8 @@ class Editor extends Component {
     console.log(canvas);
     canvas = new fabric.Canvas('c', {
       backgroundColor: this.state.background_color,
-      width: this.refs.canvas.clientWidth,
-      height: this.refs.canvas.clientHeight,
+      width: this.state.canvasSize.width,
+      height: this.state.canvasSize.height,
       isDrawingMode: false,
       skipTargetFind: false,
       selectable: true,
@@ -271,8 +263,8 @@ class Editor extends Component {
     });
 
     window.canvas = canvas;
-    this.last_tool = 0;
-    this.bind_events(this.last_tool);
+    this.last_tool = -1;
+    this.click_tool(this.state.active_tool)
     // window.addEventListener('resize', this.resize);
     canvas.freeDrawingBrush.color = this.state.pen_color;
     canvas.freeDrawingBrush.width = this.state.pen_width;
@@ -361,7 +353,7 @@ class Editor extends Component {
       };
 
       var img = new Image();
-      img.src = './honey_im_subtle.png';
+      img.src = './texture.png';
 
       this.texturePatternBrush = new fabric.PatternBrush(canvas);
       this.texturePatternBrush.source = img;
@@ -393,6 +385,7 @@ class Editor extends Component {
     this.disableUndoRedo();
   };
   unbind_events = index => {
+    if(index<0) return;
     if (index === 0) {
       this.unbind_select();
     } else {
@@ -1180,6 +1173,8 @@ class Editor extends Component {
     } else {
       btn_redo = <button onClick={this.redo}>redo</button>;
     }
+    let the_width;
+    if(canvas) the_width=canvas.getWidth();
     return (
       <div id="root_new">
       
@@ -1286,10 +1281,7 @@ class Editor extends Component {
                 id="c"
                 ref="canvas"
                 style={{
-                  border: 'solid green 3px',
                   margin: '0px 10px 10px 10px',
-                  width: this.state.canvasSize.width,
-                  height: this.state.canvasSize.height,
                 }}
               >
                 请使用支持HTML5的浏览器
@@ -1301,7 +1293,7 @@ class Editor extends Component {
           <button
             onClick={() => {
               if (this.state.showPreview === 'none') {
-                this.setState({ showPreview: 'flex' });
+                this.setState({ showPreview: 'block' });
               } else {
                 this.setState({ showPreview: 'none' });
               }
@@ -1312,25 +1304,26 @@ class Editor extends Component {
           <div
             style={{
               margin: '10 10 10 10',
-              with: '250px',
-              height: '400px',
-              flexDirection: 'column',
               display: this.state.showPreview,
             }}
           >
-            <div>
               <label>background color:</label>
-              <input
-                type="color"
+              <InputColor
                 value={this.state.background_color}
                 onChange={this.background_color_change}
+              /><br/>
+              <label>width:</label>
+              <input
+                value={this.state.canvasSize.width}
+                onChange={this.width_change}
+              /><br/>
+              <label>height:</label>
+              <input
+                value={this.state.canvasSize.height}
+                onChange={this.height_change}
               />
-            </div>
-            <div>
-              {' '}
-              <label>pen</label>
-              <div >
-                <label>Mode:</label>
+              <br />
+                <label>draw Mode:</label>
                 <select
             
                   value={this.state.mode}
@@ -1347,7 +1340,7 @@ class Editor extends Component {
                   <option>texture</option>
                 </select>
                 <br />
-                <label>Line width:</label>
+                <label>pen width:</label>
                 <input
                   value={this.state.pen_width}
                   onChange={this.pen_width_change}
@@ -1355,8 +1348,8 @@ class Editor extends Component {
                 />
                 <br />
 
-                <label>Line color:</label>
-                <input
+                <label>pen color:</label>
+                <InputColor
                   type="color"
                   value={this.state.pen_color}
                   onChange={this.color_change}
@@ -1365,7 +1358,7 @@ class Editor extends Component {
                 <br />
 
                 <label>Shadow color:</label>
-                <input
+                <InputColor
                   type="color"
                   value={this.state.shadow_color}
                   onChange={this.shadow_color_change}
@@ -1388,15 +1381,11 @@ class Editor extends Component {
  
                 />
                 <br />
-              </div>
-              <div>
-                fill
-                <SketchPicker disableAlpha={false}
-                  color={this.state.fill}
-                  onChangeComplete={this.onChangeComplete_fill}
+                <label>fill color:</label>
+                <InputColor
+                  value={this.state.fill}
+                  onChange={this.onChange_fill}
                 />
-              </div>
-            </div>
           </div>
         </div>
         <div id="contain_prop">
