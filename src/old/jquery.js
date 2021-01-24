@@ -227,9 +227,9 @@
         ? // Return a 'clean' array
           this.toArray()
         : // Return just the object
-          num < 0
-          ? this[this.length + num]
-          : this[num];
+        num < 0
+        ? this[this.length + num]
+        : this[num];
     },
 
     // Take an array of elements and push it onto the stack
@@ -900,11 +900,11 @@
       return chainable
         ? elems
         : // Gets
-          bulk
-          ? fn.call(elems)
-          : length
-            ? fn(elems[0], key)
-            : emptyGet;
+        bulk
+        ? fn.call(elems)
+        : length
+        ? fn(elems[0], key)
+        : emptyGet;
     },
 
     now: function() {
@@ -1026,15 +1026,15 @@
   // All jQuery objects should point back to these
   rootjQuery = jQuery(document);
   /*!
- * Sizzle CSS Selector Engine v1.10.2
- * http://sizzlejs.com/
- *
- * Copyright 2013 jQuery Foundation, Inc. and other contributors
- * Released under the MIT license
- * http://jquery.org/license
- *
- * Date: 2013-07-03
- */
+   * Sizzle CSS Selector Engine v1.10.2
+   * http://sizzlejs.com/
+   *
+   * Copyright 2013 jQuery Foundation, Inc. and other contributors
+   * Released under the MIT license
+   * http://jquery.org/license
+   *
+   * Date: 2013-07-03
+   */
   (function(window, undefined) {
     var i,
       support,
@@ -1199,13 +1199,10 @@
         return high !== high || escapedWhitespace
           ? escaped
           : // BMP codepoint
-            high < 0
-            ? String.fromCharCode(high + 0x10000)
-            : // Supplemental Plane codepoint (surrogate pair)
-              String.fromCharCode(
-                (high >> 10) | 0xd800,
-                (high & 0x3ff) | 0xdc00
-              );
+          high < 0
+          ? String.fromCharCode(high + 0x10000)
+          : // Supplemental Plane codepoint (surrogate pair)
+            String.fromCharCode((high >> 10) | 0xd800, (high & 0x3ff) | 0xdc00);
       };
 
     // Optimize for push.apply( _, NodeList )
@@ -1846,15 +1843,14 @@
               return a === doc
                 ? -1
                 : b === doc
-                  ? 1
-                  : aup
-                    ? -1
-                    : bup
-                      ? 1
-                      : sortInput
-                        ? indexOf.call(sortInput, a) -
-                          indexOf.call(sortInput, b)
-                        : 0;
+                ? 1
+                : aup
+                ? -1
+                : bup
+                ? 1
+                : sortInput
+                ? indexOf.call(sortInput, a) - indexOf.call(sortInput, b)
+                : 0;
 
               // If the nodes are siblings, we can do a quick check
             } else if (aup === bup) {
@@ -1880,11 +1876,11 @@
               ? // Do a sibling check if the nodes have a common ancestor
                 siblingCheck(ap[i], bp[i])
               : // Otherwise nodes in our document sort first
-                ap[i] === preferredDoc
-                ? -1
-                : bp[i] === preferredDoc
-                  ? 1
-                  : 0;
+              ap[i] === preferredDoc
+              ? -1
+              : bp[i] === preferredDoc
+              ? 1
+              : 0;
           };
 
       return doc;
@@ -1953,8 +1949,8 @@
         ? support.attributes || !documentIsHTML
           ? elem.getAttribute(name)
           : (val = elem.getAttributeNode(name)) && val.specified
-            ? val.value
-            : null
+          ? val.value
+          : null
         : val;
     };
 
@@ -2176,19 +2172,19 @@
             return operator === '='
               ? result === check
               : operator === '!='
-                ? result !== check
-                : operator === '^='
-                  ? check && result.indexOf(check) === 0
-                  : operator === '*='
-                    ? check && result.indexOf(check) > -1
-                    : operator === '$='
-                      ? check && result.slice(-check.length) === check
-                      : operator === '~='
-                        ? (' ' + result + ' ').indexOf(check) > -1
-                        : operator === '|='
-                          ? result === check ||
-                            result.slice(0, check.length + 1) === check + '-'
-                          : false;
+              ? result !== check
+              : operator === '^='
+              ? check && result.indexOf(check) === 0
+              : operator === '*='
+              ? check && result.indexOf(check) > -1
+              : operator === '$='
+              ? check && result.slice(-check.length) === check
+              : operator === '~='
+              ? (' ' + result + ' ').indexOf(check) > -1
+              : operator === '|='
+              ? result === check ||
+                result.slice(0, check.length + 1) === check + '-'
+              : false;
           };
         },
 
@@ -2655,9 +2651,9 @@
       return parseOnly
         ? soFar.length
         : soFar
-          ? Sizzle.error(selector)
-          : // Cache the tokens
-            tokenCache(selector, groups).slice(0);
+        ? Sizzle.error(selector)
+        : // Cache the tokens
+          tokenCache(selector, groups).slice(0);
     }
 
     function toSelector(tokens) {
@@ -3230,8 +3226,8 @@
           return (val = elem.getAttributeNode(name)) && val.specified
             ? val.value
             : elem[name] === true
-              ? name.toLowerCase()
-              : null;
+            ? name.toLowerCase()
+            : null;
         }
       });
     }
@@ -3257,27 +3253,27 @@
   }
 
   /*
- * Create a callback list using the following parameters:
- *
- *	options: an optional list of space-separated options that will change how
- *			the callback list behaves or a more traditional option object
- *
- * By default a callback list will act like an event callback list and can be
- * "fired" multiple times.
- *
- * Possible options:
- *
- *	once:			will ensure the callback list can only be fired once (like a Deferred)
- *
- *	memory:			will keep track of previous values and will call any callback added
- *					after the list has been fired right away with the latest "memorized"
- *					values (like a Deferred)
- *
- *	unique:			will ensure a callback can only be added once (no duplicate in the list)
- *
- *	stopOnFalse:	interrupt callings when a callback returns false
- *
- */
+   * Create a callback list using the following parameters:
+   *
+   *	options: an optional list of space-separated options that will change how
+   *			the callback list behaves or a more traditional option object
+   *
+   * By default a callback list will act like an event callback list and can be
+   * "fired" multiple times.
+   *
+   * Possible options:
+   *
+   *	once:			will ensure the callback list can only be fired once (like a Deferred)
+   *
+   *	memory:			will keep track of previous values and will call any callback added
+   *					after the list has been fired right away with the latest "memorized"
+   *					values (like a Deferred)
+   *
+   *	unique:			will ensure a callback can only be added once (no duplicate in the list)
+   *
+   *	stopOnFalse:	interrupt callings when a callback returns false
+   *
+   */
   jQuery.Callbacks = function(options) {
     // Convert options from String-formatted to Object-formatted if needed
     // (we check in cache first)
@@ -4149,10 +4145,10 @@
             jQuery.data(this, key, value);
           })
         : // Gets one value
-          // Try to fetch any internally stored data first
-          elem
-          ? dataAttr(elem, key, jQuery.data(elem, key))
-          : null;
+        // Try to fetch any internally stored data first
+        elem
+        ? dataAttr(elem, key, jQuery.data(elem, key))
+        : null;
     },
 
     removeData: function(key) {
@@ -4176,15 +4172,15 @@
             data === 'true'
               ? true
               : data === 'false'
-                ? false
-                : data === 'null'
-                  ? null
-                  : // Only convert to a number if it doesn't change the string
-                    +data + '' === data
-                    ? +data
-                    : rbrace.test(data)
-                      ? jQuery.parseJSON(data)
-                      : data;
+              ? false
+              : data === 'null'
+              ? null
+              : // Only convert to a number if it doesn't change the string
+              +data + '' === data
+              ? +data
+              : rbrace.test(data)
+              ? jQuery.parseJSON(data)
+              : data;
         } catch (e) {}
 
         // Make sure we set the data so it isn't changed later
@@ -4591,9 +4587,9 @@
             ? // handle most common string cases
               ret.replace(rreturn, '')
             : // handle cases where value is null/undef or number
-              ret == null
-              ? ''
-              : ret;
+            ret == null
+            ? ''
+            : ret;
         }
 
         return;
@@ -4871,8 +4867,8 @@
             ? parseInt(tabindex, 10)
             : rfocusable.test(elem.nodeName) ||
               (rclickable.test(elem.nodeName) && elem.href)
-              ? 0
-              : -1;
+            ? 0
+            : -1;
         },
       },
     },
@@ -4909,10 +4905,10 @@
               ret = isXML
                 ? undefined
                 : /* jshint eqeqeq: false */
-                  (jQuery.expr.attrHandle[name] = undefined) !=
+                (jQuery.expr.attrHandle[name] = undefined) !=
                   getter(elem, name, isXML)
-                  ? name.toLowerCase()
-                  : null;
+                ? name.toLowerCase()
+                : null;
             jQuery.expr.attrHandle[name] = fn;
             return ret;
           }
@@ -4920,8 +4916,8 @@
             return isXML
               ? undefined
               : elem[jQuery.camelCase('default-' + name)]
-                ? name.toLowerCase()
-                : null;
+              ? name.toLowerCase()
+              : null;
           };
   });
 
@@ -4969,8 +4965,8 @@
         return isXML
           ? undefined
           : (ret = elem.getAttributeNode(name)) && ret.value !== ''
-            ? ret.value
-            : null;
+          ? ret.value
+          : null;
       };
     jQuery.valHooks.button = {
       get: function(elem, name) {
@@ -5111,9 +5107,9 @@
   }
 
   /*
- * Helper functions for managing events -- not part of the public interface.
- * Props to Dean Edwards' addEvent library for many of the ideas.
- */
+   * Helper functions for managing events -- not part of the public interface.
+   * Props to Dean Edwards' addEvent library for many of the ideas.
+   */
   jQuery.event = {
     global: {},
 
@@ -5631,8 +5627,8 @@
         this.fixHooks[type] = fixHook = rmouseEvent.test(type)
           ? this.mouseHooks
           : rkeyEvent.test(type)
-            ? this.keyHooks
-            : {};
+          ? this.keyHooks
+          : {};
       }
       copy = fixHook.props ? this.props.concat(fixHook.props) : this.props;
 
@@ -7037,8 +7033,8 @@
         typeof context.getElementsByTagName !== core_strundefined
           ? context.getElementsByTagName(tag || '*')
           : typeof context.querySelectorAll !== core_strundefined
-            ? context.querySelectorAll(tag || '*')
-            : undefined;
+          ? context.querySelectorAll(tag || '*')
+          : undefined;
 
     if (!found) {
       for (
@@ -7192,9 +7188,9 @@
                 tag === 'table' && !rtbody.test(elem)
                   ? tmp.firstChild
                   : // String was a bare <thead> or <tfoot>
-                    wrap[1] === '<table>' && !rtbody.test(elem)
-                    ? tmp
-                    : 0;
+                  wrap[1] === '<table>' && !rtbody.test(elem)
+                  ? tmp
+                  : 0;
 
               j = elem && elem.childNodes.length;
               while (j--) {
@@ -7834,9 +7830,9 @@
           ? // If we already have the right measurement, avoid augmentation
             4
           : // Otherwise initialize for horizontal or vertical properties
-            name === 'width'
-            ? 1
-            : 0,
+          name === 'width'
+          ? 1
+          : 0,
       val = 0;
 
     for (; i < 4; i += 2) {
@@ -8016,8 +8012,8 @@
         )
           ? 0.01 * parseFloat(RegExp.$1) + ''
           : computed
-            ? '1'
-            : '';
+          ? '1'
+          : '';
       },
 
       set: function(elem, value) {
@@ -8175,10 +8171,10 @@
           return val == null
             ? null
             : jQuery.isArray(val)
-              ? jQuery.map(val, function(val) {
-                  return { name: elem.name, value: val.replace(rCRLF, '\r\n') };
-                })
-              : { name: elem.name, value: val.replace(rCRLF, '\r\n') };
+            ? jQuery.map(val, function(val) {
+                return { name: elem.name, value: val.replace(rCRLF, '\r\n') };
+              })
+            : { name: elem.name, value: val.replace(rCRLF, '\r\n') };
         })
         .get();
     },
@@ -8301,20 +8297,20 @@
     // Keep a copy of the old load method
     _load = jQuery.fn.load,
     /* Prefilters
-	 * 1) They are useful to introduce custom dataTypes (see ajax/jsonp.js for an example)
-	 * 2) These are called:
-	 *    - BEFORE asking for a transport
-	 *    - AFTER param serialization (s.data is a string if s.processData is true)
-	 * 3) key is the dataType
-	 * 4) the catchall symbol "*" can be used
-	 * 5) execution will start with transport dataType and THEN continue down to "*" if needed
-	 */
+     * 1) They are useful to introduce custom dataTypes (see ajax/jsonp.js for an example)
+     * 2) These are called:
+     *    - BEFORE asking for a transport
+     *    - AFTER param serialization (s.data is a string if s.processData is true)
+     * 3) key is the dataType
+     * 4) the catchall symbol "*" can be used
+     * 5) execution will start with transport dataType and THEN continue down to "*" if needed
+     */
     prefilters = {},
     /* Transports bindings
-	 * 1) key is the dataType
-	 * 2) the catchall symbol "*" can be used
-	 * 3) selection will start with transport dataType and THEN go to "*" if needed
-	 */
+     * 1) key is the dataType
+     * 2) the catchall symbol "*" can be used
+     * 3) selection will start with transport dataType and THEN go to "*" if needed
+     */
     transports = {},
     // Avoid comment-prolog char sequence (#10098); must appease lint and evade compression
     allTypes = '*/'.concat('*');
@@ -8825,7 +8821,7 @@
         'Accept',
         s.dataTypes[0] && s.accepts[s.dataTypes[0]]
           ? s.accepts[s.dataTypes[0]] +
-            (s.dataTypes[0] !== '*' ? ', ' + allTypes + '; q=0.01' : '')
+              (s.dataTypes[0] !== '*' ? ', ' + allTypes + '; q=0.01' : '')
           : s.accepts['*']
       );
 
@@ -9036,9 +9032,9 @@
   });
 
   /* Handles responses to an ajax request:
- * - finds the right dataType (mediates between content-type and expected dataType)
- * - returns the corresponding response
- */
+   * - finds the right dataType (mediates between content-type and expected dataType)
+   * - returns the corresponding response
+   */
   function ajaxHandleResponses(s, jqXHR, responses) {
     var firstDataType,
       ct,
@@ -9095,8 +9091,8 @@
   }
 
   /* Chain conversions given the request and the original response
- * Also sets the responseXXX fields on the jqXHR instance
- */
+   * Also sets the responseXXX fields on the jqXHR instance
+   */
   function ajaxConvert(s, response, jqXHR, isSuccess) {
     var conv2,
       current,
@@ -9392,11 +9388,11 @@
   // (This is still attached to ajaxSettings for backward compatibility)
   jQuery.ajaxSettings.xhr = window.ActiveXObject
     ? /* Microsoft failed to properly
-	 * implement the XMLHttpRequest in IE7 (can't request local files),
-	 * so we use the ActiveXObject when it is available
-	 * Additionally XMLHttpRequest can be disabled in IE7/IE8 so
-	 * we need a fallback.
-	 */
+       * implement the XMLHttpRequest in IE7 (can't request local files),
+       * so we use the ActiveXObject when it is available
+       * Additionally XMLHttpRequest can be disabled in IE7/IE8 so
+       * we need a fallback.
+       */
       function() {
         return (!this.isLocal && createStandardXHR()) || createActiveXHR();
       }
@@ -10261,10 +10257,10 @@
     opt.duration = jQuery.fx.off
       ? 0
       : typeof opt.duration === 'number'
-        ? opt.duration
-        : opt.duration in jQuery.fx.speeds
-          ? jQuery.fx.speeds[opt.duration]
-          : jQuery.fx.speeds._default;
+      ? opt.duration
+      : opt.duration in jQuery.fx.speeds
+      ? jQuery.fx.speeds[opt.duration]
+      : jQuery.fx.speeds._default;
 
     // normalize opt.queue - true/undefined/null -> "fx"
     if (opt.queue == null || opt.queue === true) {
@@ -10553,8 +10549,8 @@
     return jQuery.isWindow(elem)
       ? elem
       : elem.nodeType === 9
-        ? elem.defaultView || elem.parentWindow
-        : false;
+      ? elem.defaultView || elem.parentWindow
+      : false;
   }
   // Create innerHeight, innerWidth, height, width, outerHeight and outerWidth methods
   jQuery.each({ Height: 'height', Width: 'width' }, function(name, type) {

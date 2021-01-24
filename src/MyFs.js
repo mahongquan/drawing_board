@@ -52,7 +52,7 @@ function children(path1) {
     return myPathObj(p1);
   });
   let dic = { path: p, children: children_stats };
-  console.log(dic);
+  // console.log(dic);
   return dic;
 }
 //console.info(children("."))

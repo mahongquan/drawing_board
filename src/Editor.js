@@ -9,12 +9,15 @@ import PropEdit from './PropEdit';
 import InputColor from './InputColor';
 import sprintf from 'sprintf';
 function dataURLtoBlob(dataurl) {
-    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
-        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-    while(n--){
-        u8arr[n] = bstr.charCodeAt(n);
-    }
-    return u8arr;//new Blob([u8arr], {type:mime});
+  var arr = dataurl.split(','),
+    mime = arr[0].match(/:(.*?);/)[1],
+    bstr = atob(arr[1]),
+    n = bstr.length,
+    u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return u8arr; //new Blob([u8arr], {type:mime});
 }
 var panning = false;
 const tool_types = [
@@ -72,7 +75,7 @@ const fs = window.require('fs');
 const electron = window.require('electron');
 const { ipcRenderer } = window.require('electron'); //
 const fontSize = 16;
-const toolbar_h = 70;
+const toolbar_h = 80;
 class Editor extends Component {
   constructor() {
     super();
@@ -93,24 +96,29 @@ class Editor extends Component {
     ipcRenderer.on('about', () => {
       this.setState({ show_about: true });
     });
-    data.config.state.filename="";
+    // data.config.state.filename="";
     this.state = data.config.state;
     this.history = [];
     this.history_index = -1;
     this.fabricHistoryReplay = false;
     this.history_len = 0;
+    // this.canvas=React.createRef();
   }
-  width_change=(e)=>{
-    let w=parseInt(e.target.value,10) || 10;
+  width_change = e => {
+    let w = parseInt(e.target.value, 10) || 10;
     canvas.setWidth(w);
-    this.setState({canvasSize:{width:w,height:this.state.canvasSize.height}});
-  }
-  height_change=(e)=>{
-    let w=parseInt(e.target.value,10) || 10;
+    this.setState({
+      canvasSize: { width: w, height: this.state.canvasSize.height },
+    });
+  };
+  height_change = e => {
+    let w = parseInt(e.target.value, 10) || 10;
     canvas.setHeight(w);
-    this.setState({canvasSize:{width:this.state.canvasSize.width,height:w}});
-  }
-  background_color_change = (s) => {
+    this.setState({
+      canvasSize: { width: this.state.canvasSize.width, height: w },
+    });
+  };
+  background_color_change = s => {
     // console.log("background_color_change");
     // console.log(vcolor);
     // let s=sprintf("rgba(%d,%d,%d,%f)",vcolor.rgb.r,vcolor.rgb.g,vcolor.rgb.b,vcolor.rgb.a);
@@ -162,7 +170,7 @@ class Editor extends Component {
   };
   propChange = dict => {
     console.log(dict);
-    if (this.state.selected[0]) {
+    if (this.state.selected && this.state.selected[0]) {
       this.state.selected[0].set(dict);
       canvas.renderAll();
     }
@@ -173,7 +181,7 @@ class Editor extends Component {
     canvas.freeDrawingBrush.color = e;
   };
   shadow_color_change = e => {
-    this.setState({ shadow_color: e});
+    this.setState({ shadow_color: e });
     canvas.freeDrawingBrush.shadow.color = e;
   };
   shadow_width_change = e => {
@@ -235,23 +243,23 @@ class Editor extends Component {
   //     }
   //   );
   // };
-  hline_func=()=> {
-        var patternCanvas = fabric.document.createElement('canvas');
-        patternCanvas.width = patternCanvas.height = 10;
-        var ctx = patternCanvas.getContext('2d');
+  hline_func = () => {
+    var patternCanvas = fabric.document.createElement('canvas');
+    patternCanvas.width = patternCanvas.height = 10;
+    var ctx = patternCanvas.getContext('2d');
 
-        ctx.strokeStyle = pen_color;
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.moveTo(5, 0);
-        ctx.lineTo(5, 10);
-        ctx.closePath();
-        ctx.stroke();
+    ctx.strokeStyle = pen_color;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(5, 0);
+    ctx.lineTo(5, 10);
+    ctx.closePath();
+    ctx.stroke();
 
-        return patternCanvas;
+    return patternCanvas;
   };
   componentDidMount = () => {
-    console.log(canvas);
+    // console.log(canvas);
     canvas = new fabric.Canvas('c', {
       backgroundColor: this.state.background_color,
       width: this.state.canvasSize.width,
@@ -261,10 +269,17 @@ class Editor extends Component {
       selectable: true,
       selection: true,
     });
-
+    if (data.config.state.filename) {
+      console.log('auto open file');
+      this.openfile(data.config.state.filename);
+    }
+    fabric.Object.prototype.cornerSize = 20;
+    fabric.Object.prototype.borderColor = 'red';
+    fabric.Object.prototype.cornerColor = '#0000ff';
+    fabric.Object.prototype.cornerStrokeColor = '#0000ff';
     window.canvas = canvas;
     this.last_tool = -1;
-    this.click_tool(this.state.active_tool)
+    this.click_tool(this.state.active_tool);
     // window.addEventListener('resize', this.resize);
     canvas.freeDrawingBrush.color = this.state.pen_color;
     canvas.freeDrawingBrush.width = this.state.pen_width;
@@ -277,12 +292,12 @@ class Editor extends Component {
     });
     if (fabric.PatternBrush) {
       this.vLinePatternBrush = new fabric.PatternBrush(canvas);
-      this.vLinePatternBrush.getPatternSrc =function (){
+      this.vLinePatternBrush.getPatternSrc = function() {
         var patternCanvas = fabric.document.createElement('canvas');
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext('2d');
 
-        ctx.strokeStyle =this.color;
+        ctx.strokeStyle = this.color;
         ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.moveTo(0, 5);
@@ -294,7 +309,7 @@ class Editor extends Component {
       };
 
       this.hLinePatternBrush = new fabric.PatternBrush(canvas);
-      this.hLinePatternBrush.getPatternSrc = function(){
+      this.hLinePatternBrush.getPatternSrc = function() {
         var patternCanvas = fabric.document.createElement('canvas');
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext('2d');
@@ -308,11 +323,10 @@ class Editor extends Component {
         ctx.stroke();
 
         return patternCanvas;
-
-      }
+      };
 
       this.squarePatternBrush = new fabric.PatternBrush(canvas);
-      this.squarePatternBrush.getPatternSrc = ()=> {
+      this.squarePatternBrush.getPatternSrc = () => {
         var squareWidth = 10,
           squareDistance = 2;
 
@@ -328,7 +342,7 @@ class Editor extends Component {
       };
 
       this.diamondPatternBrush = new fabric.PatternBrush(canvas);
-      this.diamondPatternBrush.getPatternSrc = function(){
+      this.diamondPatternBrush.getPatternSrc = function() {
         var squareWidth = 10,
           squareDistance = 5;
         var patternCanvas = fabric.document.createElement('canvas');
@@ -337,7 +351,7 @@ class Editor extends Component {
           width: squareWidth,
           height: squareWidth,
           angle: 45,
-          fill: this.color
+          fill: this.color,
         });
 
         var canvasWidth = rect.getBoundingRect().width;
@@ -385,7 +399,7 @@ class Editor extends Component {
     this.disableUndoRedo();
   };
   unbind_events = index => {
-    if(index<0) return;
+    if (index < 0) return;
     if (index === 0) {
       this.unbind_select();
     } else {
@@ -418,7 +432,7 @@ class Editor extends Component {
     canvas.zoomToPoint(zoomPoint, zoom);
   };
   bind_select = () => {
-    console.log('addEventListener');
+    // console.log('addEventListener');
     // canvas.upperCanvasEl.addEventListener("mousewheel",this.mousewheel);
     canvas.on('mouse:down', function(e) {
       //按住alt键才可拖动画布
@@ -464,15 +478,15 @@ class Editor extends Component {
       this.bind_select();
     } else {
       //绑定画板事件
-      canvas.on('mouse:down',(options)=>{
-        console.log(options);
-        var xy = options.absolutePointer;//transformMouse(options.e.offsetX, options.e.offsetY);
+      canvas.on('mouse:down', options => {
+        // console.log(options);
+        var xy = options.absolutePointer; //transformMouse(options.e.offsetX, options.e.offsetY);
         mouseFrom.x = xy.x;
         mouseFrom.y = xy.y;
         doDrawing = true;
       });
       canvas.on('mouse:up', options => {
-        var xy = options.absolutePointer;//transformMouse(options.e.offsetX, options.e.offsetY);
+        var xy = options.absolutePointer; //transformMouse(options.e.offsetX, options.e.offsetY);
         mouseTo.x = xy.x;
         mouseTo.y = xy.y;
         // drawing();
@@ -481,20 +495,20 @@ class Editor extends Component {
         doDrawing = false;
         this.save_history();
       });
-      canvas.on('mouse:move', (options)=> {
+      canvas.on('mouse:move', options => {
         // if (moveCount % 2 && !doDrawing) {
-        if(!doDrawing){
+        if (!doDrawing) {
           //减少绘制频率
           return;
         }
         // moveCount++;
-        var xy = options.absolutePointer;//transformMouse(options.e.offsetX, options.e.offsetY);
+        var xy = options.absolutePointer; //transformMouse(options.e.offsetX, options.e.offsetY);
         mouseTo.x = xy.x;
         mouseTo.y = xy.y;
         this.drawing();
       });
 
-      canvas.on('selection:created', (e)=> {
+      canvas.on('selection:created', e => {
         if (e.target._objects) {
           //多选删除
           var etCount = e.target._objects.length;
@@ -547,26 +561,33 @@ class Editor extends Component {
       res => {
         if (!res) return;
         // const cheerio = require('cheerio');
-        this.setState({ filename: res[0] });
-        let content = fs.readFileSync(res[0], { encoding: 'utf-8', flag: 'r' });
-        if (path.parse(res[0]).ext === '.svg') {
-          fabric.loadSVGFromString(content, function(objects, options) {
-            var obj = fabric.util.groupSVGElements(objects, options);
-            canvas.clear(); //reset canvas
-            this.history_index = -1; //reset history
-            this.history_len = 0;
-            this.reset_zoom(); //reset zoom
-            canvas.add(obj).renderAll();
-          });
-        } else {
-          this.history_index = -1;
-          this.history_len = 0;
-          this.reset_zoom();
-          canvas.loadFromJSON(content);
-        }
-        this.setState({ html: content, showPreview: 'none' });
+        this.openfile(res[0]);
       }
     );
+  };
+  openfile = fn => {
+    try {
+      let content = fs.readFileSync(fn, { encoding: 'utf-8', flag: 'r' });
+      if (path.parse(fn).ext === '.svg') {
+        fabric.loadSVGFromString(content, function(objects, options) {
+          var obj = fabric.util.groupSVGElements(objects, options);
+          canvas.clear(); //reset canvas
+          this.history_index = -1; //reset history
+          this.history_len = 0;
+          this.reset_zoom(); //reset zoom
+          canvas.add(obj).renderAll();
+        });
+      } else {
+        this.history_index = -1;
+        this.history_len = 0;
+        this.reset_zoom();
+        canvas.loadFromJSON(content);
+      }
+      this.setState({ filename: fn });
+    } catch (e) {
+      console.log(e);
+      this.setState({ filename: '' });
+    }
   };
   animationEnd = el => {
     var animations = {
@@ -625,8 +646,7 @@ class Editor extends Component {
 
           if (path.parse(res).ext === '.svg') {
             fs.writeFileSync(res, this.genOutSvg());
-          }
-          else if(path.parse(res).ext === '.png') {
+          } else if (path.parse(res).ext === '.png') {
             var blob = dataURLtoBlob(canvas.toDataURL());
             fs.writeFileSync(res, blob);
           } else {
@@ -682,8 +702,8 @@ class Editor extends Component {
       this.save_history();
     });
     drawType = tool_types[index]; //jQuery(this).attr("data-type");
-    console.log(index);
-    console.log(drawType);
+    // console.log(index);
+    // console.log(drawType);
     canvas.isDrawingMode = false;
     if (textbox) {
       //退出文本编辑状态
@@ -807,7 +827,34 @@ class Editor extends Component {
     canvas.getActiveObject().toActiveSelection();
     canvas.requestRenderAll();
   };
-
+  front = () => {
+    if (!canvas.getActiveObject()) {
+      return;
+    }
+    canvas.getActiveObject().bringToFront();
+    this.selectNone();
+  };
+  back = () => {
+    if (!canvas.getActiveObject()) {
+      return;
+    }
+    canvas.getActiveObject().sendToBack();
+    this.selectNone();
+  };
+  downward = () => {
+    if (!canvas.getActiveObject()) {
+      return;
+    }
+    canvas.getActiveObject().sendBackwards();
+    this.selectNone();
+  };
+  upward = () => {
+    if (!canvas.getActiveObject()) {
+      return;
+    }
+    canvas.getActiveObject().bringForward();
+    this.selectNone();
+  };
   Copy = () => {
     // clone what are you copying since you
     // may want copy and paste on different moment.
@@ -849,9 +896,11 @@ class Editor extends Component {
     this.setState({ show_color: true });
   };
   zoom_change = e => {
-    console.log(e);
-    this.setState({ zoom: parseInt(e.target.value, 10) }, () => {
-      canvas.setZoom(this.state.zoom);
+    let v = parseInt(e.target.value, 10);
+    console.log('zoom:' + v);
+    this.setState({ zoom: v }, () => {
+      var zoomPoint = new fabric.Point(canvas.width / 2, canvas.height / 2);
+      canvas.zoomToPoint(zoomPoint, v);
     });
   };
   selectAll = () => {
@@ -904,7 +953,7 @@ class Editor extends Component {
   };
   undo = () => {
     console.log('undo');
-    if(this.history_index===-1) return;
+    if (this.history_index === -1) return;
     this.history_index -= 1;
     this.disableUndoRedo();
     canvas.clear();
@@ -913,7 +962,7 @@ class Editor extends Component {
   };
   redo = () => {
     console.log('redo');
-    if(this.history_index===this.history_len-1) return;
+    if (this.history_index === this.history_len - 1) return;
     this.history_index += 1;
     this.disableUndoRedo();
     canvas.clear();
@@ -961,14 +1010,13 @@ class Editor extends Component {
       case 'circle': //正圆
         var left = mouseFrom.x,
           top = mouseFrom.y;
-        var radius =
-          Math.sqrt(
-            (mouseTo.x - left) * (mouseTo.x - left) +
-              (mouseTo.y - top) * (mouseTo.y - top)
-          );
+        var radius = Math.sqrt(
+          (mouseTo.x - left) * (mouseTo.x - left) +
+            (mouseTo.y - top) * (mouseTo.y - top)
+        );
         canvasObject = new fabric.Circle({
-          left: left-radius,
-          top: top-radius,
+          left: left - radius,
+          top: top - radius,
           stroke: this.state.pen_color,
           fill: this.state.fill,
           radius: radius,
@@ -1053,11 +1101,12 @@ class Editor extends Component {
         });
         break;
       case 'equilateral': //等边三角形
-        var height = mouseTo.y - mouseFrom.y;
+        var height = Math.abs(mouseTo.y - mouseFrom.y);
+        var width = Math.abs(mouseTo.x - mouseFrom.x);
         canvasObject = new fabric.Triangle({
           top: mouseFrom.y,
           left: mouseFrom.x,
-          width: Math.sqrt(Math.pow(height, 2) + Math.pow(height / 2.0, 2)),
+          width: width,
           height: height,
           stroke: this.state.pen_color,
           strokeWidth: this.state.pen_width,
@@ -1091,8 +1140,7 @@ class Editor extends Component {
       drawingObject = canvasObject;
     }
   };
-  add_image=()=>{
-
+  add_image = () => {
     var dialog = electron.remote.dialog;
     dialog.showOpenDialog(
       {
@@ -1107,7 +1155,7 @@ class Editor extends Component {
       res => {
         if (!res) return;
         // const cheerio = require('cheerio');
-        fabric.Image.fromURL(res[0], (oImg)=>{
+        fabric.Image.fromURL(res[0], oImg => {
           // scale image down, and flip it, before adding it onto canvas
           // window.img=oImg;
           // console.log(oImg);
@@ -1115,7 +1163,7 @@ class Editor extends Component {
         });
       }
     );
-  }
+  };
   render = () => {
     let filepath = path.dirname(this.state.filename);
     let li_tools = tool_types.map((item, index) => {
@@ -1152,8 +1200,8 @@ class Editor extends Component {
         );
       }
     });
-    console.log('=====================================');
-    console.log(this.state);
+    // console.log('=====================================');
+    // console.log(this.state);
     let btn_undo, btn_redo;
     if (this.state.undo_disabled) {
       btn_undo = (
@@ -1174,10 +1222,9 @@ class Editor extends Component {
       btn_redo = <button onClick={this.redo}>redo</button>;
     }
     let the_width;
-    if(canvas) the_width=canvas.getWidth();
+    if (canvas) the_width = canvas.getWidth();
     return (
       <div id="root_new">
-      
         <DlgAbout
           showModal={this.state.show_about}
           closeModal={() => {
@@ -1210,13 +1257,13 @@ class Editor extends Component {
               className={this.state.selectValue}
             >
               <button
-                style={{ margin: '10px 10px 10px 10px' }}
+                style={{ margin: '0px 10px 0px 10px' }}
                 onClick={this.save_click}
               >
                 save
               </button>
               <button
-                style={{ margin: '10px 10px 10px 10px' }}
+                style={{ margin: '0px 10px 0px 10px' }}
                 onClick={this.save_as_click}
               >
                 save as
@@ -1224,12 +1271,16 @@ class Editor extends Component {
             </span>
             <button
               onClick={this.newfile}
-              style={{ margin: '10px 10px 10px 10px' }}
+              style={{ margin: '0px 10px 0px 10px' }}
             >
               New
             </button>
             <button onClick={this.group}>group</button>
             <button onClick={this.ungroup}>un group</button>
+            <button onClick={this.front}>置顶</button>
+            <button onClick={this.back}>置底</button>
+            <button onClick={this.downward}>下降</button>
+            <button onClick={this.upward}>上升</button>
 
             <button onClick={this.Copy}>copy</button>
             <button onClick={this.Paste}>Paste</button>
@@ -1279,7 +1330,6 @@ class Editor extends Component {
             >
               <canvas
                 id="c"
-                ref="canvas"
                 style={{
                   margin: '0px 10px 10px 10px',
                 }}
@@ -1307,85 +1357,75 @@ class Editor extends Component {
               display: this.state.showPreview,
             }}
           >
-              <label>background color:</label>
-              <InputColor
-                value={this.state.background_color}
-                onChange={this.background_color_change}
-              /><br/>
-              <label>width:</label>
-              <input
-                value={this.state.canvasSize.width}
-                onChange={this.width_change}
-              /><br/>
-              <label>height:</label>
-              <input
-                value={this.state.canvasSize.height}
-                onChange={this.height_change}
-              />
-              <br />
-                <label>draw Mode:</label>
-                <select
-            
-                  value={this.state.mode}
-                  onChange={this.mode_change}
-                >
-                  <option>Pencil</option>
-                  <option>Circle</option>
-                  <option>Spray</option>
-                  <option>Pattern</option>
-                  <option>hline</option>
-                  <option>vline</option>
-                  <option>square</option>
-                  <option>diamond</option>
-                  <option>texture</option>
-                </select>
-                <br />
-                <label>pen width:</label>
-                <input
-                  value={this.state.pen_width}
-                  onChange={this.pen_width_change}
-         
-                />
-                <br />
+            <label>background color:</label>
+            <InputColor
+              value={this.state.background_color}
+              onChange={this.background_color_change}
+            />
+            <br />
+            <label>width:</label>
+            <input
+              value={this.state.canvasSize.width}
+              onChange={this.width_change}
+            />
+            <br />
+            <label>height:</label>
+            <input
+              value={this.state.canvasSize.height}
+              onChange={this.height_change}
+            />
+            <br />
+            <label>draw Mode:</label>
+            <select value={this.state.mode} onChange={this.mode_change}>
+              <option>Pencil</option>
+              <option>Circle</option>
+              <option>Spray</option>
+              <option>Pattern</option>
+              <option>hline</option>
+              <option>vline</option>
+              <option>square</option>
+              <option>diamond</option>
+              <option>texture</option>
+            </select>
+            <br />
+            <label>pen width:</label>
+            <input
+              value={this.state.pen_width}
+              onChange={this.pen_width_change}
+            />
+            <br />
 
-                <label>pen color:</label>
-                <InputColor
-                  type="color"
-                  value={this.state.pen_color}
-                  onChange={this.color_change}
+            <label>pen color:</label>
+            <InputColor
+              type="color"
+              value={this.state.pen_color}
+              onChange={this.color_change}
+            />
+            <br />
 
-                />
-                <br />
+            <label>Shadow color:</label>
+            <InputColor
+              type="color"
+              value={this.state.shadow_color}
+              onChange={this.shadow_color_change}
+            />
+            <br />
 
-                <label>Shadow color:</label>
-                <InputColor
-                  type="color"
-                  value={this.state.shadow_color}
-                  onChange={this.shadow_color_change}
+            <label>Shadow width:</label>
+            <input
+              value={this.state.shadow_width}
+              onChange={this.shadow_width_change}
+            />
+            <br />
 
-                />
-                <br />
-
-                <label>Shadow width:</label>
-                <input
-                  value={this.state.shadow_width}
-                  onChange={this.shadow_width_change}
-
-                />
-                <br />
-
-                <label>Shadow offset:</label>
-                <input
-                  value={this.state.shadow_offset}
-                  onChange={this.shadow_offset_change}
- 
-                />
-                <br />
-                <label>fill color:</label>
-                <InputColor
-                  value={this.state.fill}
-                  onChange={this.onChange_fill}
-                />
+            <label>Shadow offset:</label>
+            <input
+              value={this.state.shadow_offset}
+              onChange={this.shadow_offset_change}
+            />
+            <br />
+            <label>fill color:</label>
+            <InputColor value={this.state.fill} onChange={this.onChange_fill} />
           </div>
         </div>
         <div id="contain_prop">

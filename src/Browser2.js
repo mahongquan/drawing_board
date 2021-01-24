@@ -8,6 +8,20 @@ import {
   Tooltip,
   OverlayTrigger,
 } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import {
+  faArrowLeft,
+  faArrowUp,
+  faChevronRight,
+  faThLarge,
+  faThList,
+} from '@fortawesome/free-solid-svg-icons';
+library.add(faArrowLeft);
+library.add(faArrowUp);
+library.add(faChevronRight);
+library.add(faThList);
+library.add(faThLarge);
 var socket = require('./MyFs');
 let styles = {
   item: {
@@ -483,8 +497,8 @@ class Browser extends React.Component {
     );
     const files = this.state.files.map(this.mapfunc);
     var pathshow = this.genpath(this.state.current_path);
-    var gridGlyph = 'glyphicon glyphicon-th-large';
-    var listGlyph = 'glyphicon glyphicon-list';
+    var gridGlyph = 'th-large';
+    var listGlyph = 'th-list';
     var className = this.state.gridView ? listGlyph : gridGlyph;
     var toolbar = (
       <React.Fragment>
@@ -500,35 +514,21 @@ class Browser extends React.Component {
           </Tooltip>
         </Overlay>
         <div style={{ display: 'flex' }}>
-          <OverlayTrigger placement="bottom" overlay={tooltipback}>
-            <button>
-              <span
-                onClick={this.onBack}
-                className="glyphicon glyphicon-arrow-left"
-              />
-            </button>
-          </OverlayTrigger>
-          <OverlayTrigger placement="bottom" overlay={tooltipparent}>
-            <button>
-              <span
-                disabled={this.state.isroot}
-                onClick={this.onParent}
-                className="glyphicon glyphicon-arrow-up"
-              />
-            </button>
-          </OverlayTrigger>
           <button>
-            <span
-              onClick={this.alternateView}
-              ref="altViewSpan"
-              className={className}
+            <FontAwesomeIcon icon="arrow-left" onClick={this.onBack} />
+          </button>
+          <button>
+            <FontAwesomeIcon
+              icon="arrow-up"
+              disabled={this.state.isroot}
+              onClick={this.onParent}
             />
           </button>
           <button>
-            <span
-              onClick={this.rootclick}
-              className="glyphicon glyphicon-chevron-right"
-            />
+            <FontAwesomeIcon icon={className} onClick={this.alternateView} />
+          </button>
+          <button>
+            <FontAwesomeIcon onClick={this.rootclick} icon="chevron-right" />
           </button>
           {pathshow}
         </div>

@@ -17,20 +17,13 @@ function link(where, module_name) {
   document.head.appendChild(thelink);
 }
 function getWhere() {
-  let path = window.require('electron').ipcRenderer.sendSync('getpath');
-  let where;
-  if (path === '.') {
-    where = '..';
-  } else {
-    where = '../..';
-  }
+  let where = window.require('electron').ipcRenderer.sendSync('getpath');
   return where;
 }
 let where = getWhere();
-// module_name="./AppRoutes";
-link(where, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
-link(where, 'node_modules/bootstrap/dist/css/bootstrap-theme.min.css');
+// link(where, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
+// link(where, 'node_modules/bootstrap/dist/css/bootstrap-theme.min.css');
 link('./', 'animate.min.css');
 link('./', 'css/index.css');
-let App = require('./Editor').default;
+let App = require('./Editor_mui').default;
 ReactDOM.render(<App />, document.getElementById('root'));
