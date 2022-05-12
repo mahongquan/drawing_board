@@ -226,7 +226,12 @@ class Editor extends Component {
       canvas.freeDrawingBrush = new fabric[e.target.value + 'Brush'](canvas);
     }
 
-    // if (canvas.freeDrawingBrush) {
+    if (canvas.freeDrawingBrush) {
+      var brush = canvas.freeDrawingBrush;
+      if (brush.getPatternSrc) {
+        brush.source = brush.getPatternSrc.call(brush);
+      }
+    }
     canvas.freeDrawingBrush.color = this.state.pen_color;
     canvas.freeDrawingBrush.width = this.state.pen_width;
     canvas.freeDrawingBrush.shadow = new fabric.Shadow({
@@ -309,7 +314,7 @@ class Editor extends Component {
     });
     if (fabric.PatternBrush) {
       this.vLinePatternBrush = new fabric.PatternBrush(canvas);
-      this.vLinePatternBrush.getPatternSrc = ()=> {
+      this.vLinePatternBrush.getPatternSrc =function () {
         var patternCanvas = fabric.util.createCanvasElement();
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext('2d');
@@ -326,7 +331,7 @@ class Editor extends Component {
       };
 
       this.hLinePatternBrush = new fabric.PatternBrush(canvas);
-      this.hLinePatternBrush.getPatternSrc = ()=>{
+      this.hLinePatternBrush.getPatternSrc = function(){
         var patternCanvas = fabric.util.createCanvasElement();
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext('2d');
@@ -343,7 +348,7 @@ class Editor extends Component {
       };
 
       this.squarePatternBrush = new fabric.PatternBrush(canvas);
-      this.squarePatternBrush.getPatternSrc = () => {
+      this.squarePatternBrush.getPatternSrc = function() {
         var squareWidth = 10,
           squareDistance = 2;
 
@@ -359,29 +364,27 @@ class Editor extends Component {
       };
 
       this.diamondPatternBrush = new fabric.PatternBrush(canvas);
-      this.diamondPatternBrush.getPatternSrc =()=> {
-        var squareWidth = 10,
-          squareDistance = 5;
-        var patternCanvas = fabric.util.createCanvasElement();
-        // console.log(this);
-        var rect = new fabric.Rect({
-          width: squareWidth,
-          height: squareWidth,
-          angle: 45,
-          fill: this.color,
-        });
+      this.diamondPatternBrush.getPatternSrc = function() {
 
-        var canvasWidth = rect.getBoundingRect().width;
+      var squareWidth = 10, squareDistance = 5;
+      var patternCanvas = fabric.document.createElement('canvas');
+      var rect = new fabric.Rect({
+        width: squareWidth,
+        height: squareWidth,
+        angle: 45,
+        fill: this.color
+      });
 
-        patternCanvas.width = patternCanvas.height =
-          canvasWidth + squareDistance;
-        rect.set({ left: canvasWidth / 2, top: canvasWidth / 2 });
+      var canvasWidth = rect.getBoundingRect().width;
 
-        var ctx = patternCanvas.getContext('2d');
-        rect.render(ctx);
+      patternCanvas.width = patternCanvas.height = canvasWidth + squareDistance;
+      rect.set({ left: canvasWidth / 2, top: canvasWidth / 2 });
 
-        return patternCanvas;
-      };
+      var ctx = patternCanvas.getContext('2d');
+      rect.render(ctx);
+
+      return patternCanvas;
+    };
 
       var img = new Image();
       img.src = './texture.png';
