@@ -1,6 +1,10 @@
 import React from 'react';
 import { SketchPicker } from 'react-color';
+<<<<<<< HEAD
 import { sprintf } from "printj/printj.mjs";
+=======
+import sprintf from 'sprintf';
+>>>>>>> 7319b023710459d8a3eb212bf5bccd72a0f4b101
 import { Modal } from 'react-bootstrap';
 
 export default class InputColor extends React.Component {
