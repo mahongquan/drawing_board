@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 var path = window.require('path');
 var fs = window.require('fs');
-=======
-var path = require('path');
-var fs = require('fs');
->>>>>>> 7319b023710459d8a3eb212bf5bccd72a0f4b101
 const { StringDecoder } = require('string_decoder');
 const decoder = new StringDecoder('utf8');
 // console.log(path.resolve(__dirname));

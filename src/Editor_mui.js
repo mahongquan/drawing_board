@@ -576,7 +576,9 @@ class Editor extends Component {
     };
     electron.ipcRenderer.invoke("showOpenDialog",options).then((res)=>{
       console.log(res);
-      this.openfile(res[0]);
+      if (res){
+        this.openfile(res[0]);
+      }
     }).catch((e)=>{
       console.log(e);
     })
