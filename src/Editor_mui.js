@@ -1,13 +1,29 @@
 import React, { Component } from 'react';
-import DlgAbout from './DlgAbout';
-import DlgColor from './DlgColor';
+import DlgAbout from './DlgAbout_mui';
+import DlgColor from './DlgColor_mui';
 import data from './Data';
-import Browser from './Browser2';
 import MyFs from './MyFs';
 import { SketchPicker } from 'react-color';
-import PropEdit from './PropEdit';
-import InputColor from './InputColor';
-import sprintf from 'sprintf';
+import PropEdit from './PropEdit2';
+import InputColor from './InputColor_mui';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import AppBar from '@mui/material/AppBar';
+import ToolBar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import { withStyles } from '@mui/styles';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import { sprintf } from "printj/printj.mjs";
+const styles = {
+  root: { flexGrow: 1 },
+  grow: { flexGrow: 1 },
+  menuButton: { marginLeft: -12, marginRight: 20 },
+};
 function dataURLtoBlob(dataurl) {
   var arr = dataurl.split(','),
     mime = arr[0].match(/:(.*?);/)[1],
@@ -75,7 +91,7 @@ const fs = window.require('fs');
 const electron = window.require('electron');
 const { ipcRenderer } = window.require('electron'); //
 const fontSize = 16;
-const toolbar_h = 80;
+const toolbar_h = 50;
 class Editor extends Component {
   constructor() {
     super();
@@ -101,8 +117,9 @@ class Editor extends Component {
     this.history = [];
     this.history_index = -1;
     this.fabricHistoryReplay = false;
+    this.state.showPreview = false;
+    this.state.show_prop = false;
     this.history_len = 0;
-    // this.canvas=React.createRef();
   }
   width_change = e => {
     let w = parseInt(e.target.value, 10) || 10;
@@ -169,14 +186,14 @@ class Editor extends Component {
     canvas.zoomToPoint(zoomPoint, zoom);
   };
   propChange = dict => {
-    console.log(dict);
+    // console.log(dict);
     if (this.state.selected && this.state.selected[0]) {
       this.state.selected[0].set(dict);
       canvas.renderAll();
     }
   };
   color_change = e => {
-    console.log(e);
+    // console.log(e);
     this.setState({ pen_color: e });
     canvas.freeDrawingBrush.color = e;
   };
@@ -196,9 +213,9 @@ class Editor extends Component {
   mode_change = e => {
     this.setState({ mode: e.target.value });
     if (e.target.value === 'hline') {
-      canvas.freeDrawingBrush = this.vLinePatternBrush;
-    } else if (e.target.value === 'vline') {
       canvas.freeDrawingBrush = this.hLinePatternBrush;
+    } else if (e.target.value === 'vline') {
+      canvas.freeDrawingBrush = this.vLinePatternBrush;
     } else if (e.target.value === 'square') {
       canvas.freeDrawingBrush = this.squarePatternBrush;
     } else if (e.target.value === 'diamond') {
@@ -270,7 +287,7 @@ class Editor extends Component {
       selection: true,
     });
     if (data.config.state.filename) {
-      console.log('auto open file');
+      // console.log('auto open file');
       this.openfile(data.config.state.filename);
     }
     fabric.Object.prototype.cornerSize = 20;
@@ -292,8 +309,8 @@ class Editor extends Component {
     });
     if (fabric.PatternBrush) {
       this.vLinePatternBrush = new fabric.PatternBrush(canvas);
-      this.vLinePatternBrush.getPatternSrc = function() {
-        var patternCanvas = fabric.document.createElement('canvas');
+      this.vLinePatternBrush.getPatternSrc = ()=> {
+        var patternCanvas = fabric.util.createCanvasElement();
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext('2d');
 
@@ -309,8 +326,8 @@ class Editor extends Component {
       };
 
       this.hLinePatternBrush = new fabric.PatternBrush(canvas);
-      this.hLinePatternBrush.getPatternSrc = function() {
-        var patternCanvas = fabric.document.createElement('canvas');
+      this.hLinePatternBrush.getPatternSrc = ()=>{
+        var patternCanvas = fabric.util.createCanvasElement();
         patternCanvas.width = patternCanvas.height = 10;
         var ctx = patternCanvas.getContext('2d');
 
@@ -330,7 +347,7 @@ class Editor extends Component {
         var squareWidth = 10,
           squareDistance = 2;
 
-        var patternCanvas = fabric.document.createElement('canvas');
+        var patternCanvas = fabric.util.createCanvasElement();
         patternCanvas.width = patternCanvas.height =
           squareWidth + squareDistance;
         var ctx = patternCanvas.getContext('2d');
@@ -342,11 +359,11 @@ class Editor extends Component {
       };
 
       this.diamondPatternBrush = new fabric.PatternBrush(canvas);
-      this.diamondPatternBrush.getPatternSrc = function() {
+      this.diamondPatternBrush.getPatternSrc =()=> {
         var squareWidth = 10,
           squareDistance = 5;
-        var patternCanvas = fabric.document.createElement('canvas');
-        console.log(this);
+        var patternCanvas = fabric.util.createCanvasElement();
+        // console.log(this);
         var rect = new fabric.Rect({
           width: squareWidth,
           height: squareWidth,
@@ -424,7 +441,7 @@ class Editor extends Component {
     canvas.off('selection:created');
   };
   mousewheel = event => {
-    console.log('mousewheel');
+    // console.log('mousewheel');
     var zoom = (event.deltaY > 0 ? 0.1 : -0.1) + canvas.getZoom();
     zoom = Math.max(0.1, zoom); //最小为原来的1/10
     zoom = Math.min(3, zoom); //最大是原来的3倍
@@ -457,20 +474,20 @@ class Editor extends Component {
     });
     canvas.on('selection:cleared', options => {
       this.setState({ selected: options.selected });
-      console.log('selection:cleared');
-      console.log(options);
+      // console.log('selection:cleared');
+      // console.log(options);
     });
 
     canvas.on('selection:updated', options => {
       this.setState({ selected: options.selected });
-      console.log('selection:updated');
-      console.log(options);
+      // console.log('selection:updated');
+      // console.log(options);
     });
 
     canvas.on('selection:created', options => {
       this.setState({ selected: options.selected });
-      console.log('selection:created');
-      console.log(options);
+      // console.log('selection:created');
+      // console.log(options);
     });
   };
   bind_events = index => {
@@ -543,27 +560,26 @@ class Editor extends Component {
       canvas.loadFromJSON(content);
     }
 
-    this.setState({ html: content, showPreview: 'none' });
+    this.setState({ html: content, showPreview: false });
   };
   open_click = () => {
-    var dialog = electron.remote.dialog;
-    dialog.showOpenDialog(
-      {
-        defaultPath: path.resolve('./css_examples'),
-        properties: ['openFile'],
-        filters: [
-          { name: '*.fabric.json', extensions: ['fabric.json'] },
-          { name: '*.svg', extensions: ['svg'] },
-          { name: '*.txt', extensions: ['text'] },
-          { name: '*', extensions: ['*'] },
-        ],
-      },
-      res => {
-        if (!res) return;
-        // const cheerio = require('cheerio');
-        this.openfile(res[0]);
-      }
-    );
+    console.log(electron)
+    var options ={
+      defaultPath: path.resolve('./css_examples'),
+      properties: ['openFile'],
+      filters: [
+        { name: '*.fabric.json', extensions: ['fabric.json'] },
+        { name: '*.svg', extensions: ['svg'] },
+        { name: '*.txt', extensions: ['text'] },
+        { name: '*', extensions: ['*'] },
+      ],
+    };
+    electron.ipcRenderer.invoke("showOpenDialog",options).then((res)=>{
+      console.log(res);
+      this.openfile(res[0]);
+    }).catch((e)=>{
+      console.log(e);
+    })
   };
   openfile = fn => {
     try {
@@ -585,35 +601,35 @@ class Editor extends Component {
       }
       this.setState({ filename: fn });
     } catch (e) {
-      console.log(e);
+      // console.log(e);
       this.setState({ filename: '' });
     }
   };
-  animationEnd = el => {
-    var animations = {
-      animation: 'animationend',
-      OAnimation: 'oAnimationEnd',
-      MozAnimation: 'mozAnimationEnd',
-      WebkitAnimation: 'webkitAnimationEnd',
-    };
+  // animationEnd = el => {
+  //   var animations = {
+  //     animation: 'animationend',
+  //     OAnimation: 'oAnimationEnd',
+  //     MozAnimation: 'mozAnimationEnd',
+  //     WebkitAnimation: 'webkitAnimationEnd',
+  //   };
 
-    for (var t in animations) {
-      if (el.style[t] !== undefined) {
-        return animations[t];
-      }
-    }
-    return;
-  };
+  //   for (var t in animations) {
+  //     if (el.style[t] !== undefined) {
+  //       return animations[t];
+  //     }
+  //   }
+  //   return;
+  // };
   anim = () => {
     //console.log(e.target.value);
-    this.setState(
-      {
-        selectValue: 'flipInX animated',
-      },
-      () => {
-        setTimeout(this.check, 1000);
-      }
-    );
+    // this.setState(
+    //   {
+    //     selectValue: 'flipInX animated',
+    //   },
+    //   () => {
+    //     setTimeout(this.check, 1000);
+    //   }
+    // );
   };
   check = () => {
     if (this.animationEnd(this.refs.contactedit)) {
@@ -625,20 +641,19 @@ class Editor extends Component {
   };
 
   save_as_click = () => {
-    var dialog = electron.remote.dialog;
-    dialog.showSaveDialog(
-      {
-        defaultPath: path.resolve('./css_examples'),
-        properties: ['saveFile'],
-        filters: [
-          { name: '*.fabric.json', extensions: ['fabric.json'] },
-          { name: '*.svg', extensions: ['svg'] },
-          { name: '*.png', extensions: ['png'] },
-          { name: '*', extensions: ['*'] },
-        ],
-      },
-      res => {
-        if (res) {
+    var options ={
+      defaultPath: path.resolve('./css_examples'),
+      properties: ['saveFile'],
+      filters: [
+        { name: '*.fabric.json', extensions: ['fabric.json'] },
+        { name: '*.svg', extensions: ['svg'] },
+        { name: '*.png', extensions: ['png'] },
+        { name: '*', extensions: ['*'] },
+      ],
+    };
+    electron.ipcRenderer.invoke("showSaveDialog",options).then((res)=>{
+       console.log(res);
+       if (res) {
           this.anim();
           this.setState({ filename: res });
           this.history_index = -1;
@@ -653,8 +668,10 @@ class Editor extends Component {
             fs.writeFileSync(res, this.genOut());
           }
         }
-      }
-    );
+    }).catch((e)=>{
+      console.log(e);
+    })
+ 
   };
   save_click = () => {
     if (this.state.filename != '') {
@@ -897,7 +914,7 @@ class Editor extends Component {
   };
   zoom_change = e => {
     let v = parseInt(e.target.value, 10);
-    console.log('zoom:' + v);
+    // console.log('zoom:' + v);
     this.setState({ zoom: v }, () => {
       var zoomPoint = new fabric.Point(canvas.width / 2, canvas.height / 2);
       canvas.zoomToPoint(zoomPoint, v);
@@ -933,7 +950,7 @@ class Editor extends Component {
   };
   delete1 = () => {
     var active = canvas.getActiveObject();
-    console.log(active);
+    // console.log(active);
     if (!active) return;
     if (active.type === 'activeSelection') {
       active.forEachObject(function(obj) {
@@ -952,22 +969,22 @@ class Editor extends Component {
     canvas.requestRenderAll();
   };
   undo = () => {
-    console.log('undo');
+    // console.log('undo');
     if (this.history_index === -1) return;
     this.history_index -= 1;
     this.disableUndoRedo();
     canvas.clear();
     var obj = this.history[this.history_index];
-    canvas.loadFromDatalessJSON(obj, () => {}, canvas.renderAll.bind(canvas));
+    canvas.loadFromJSON(obj, () => {}, canvas.renderAll.bind(canvas));
   };
   redo = () => {
-    console.log('redo');
+    // console.log('redo');
     if (this.history_index === this.history_len - 1) return;
     this.history_index += 1;
     this.disableUndoRedo();
     canvas.clear();
     var obj = this.history[this.history_index];
-    canvas.loadFromDatalessJSON(obj, () => {}, canvas.renderAll.bind(canvas));
+    canvas.loadFromJSON(obj, () => {}, canvas.renderAll.bind(canvas));
   };
   handleKeyDown = e => {
     console.log(e);
@@ -1141,9 +1158,7 @@ class Editor extends Component {
     }
   };
   add_image = () => {
-    var dialog = electron.remote.dialog;
-    dialog.showOpenDialog(
-      {
+    var options ={
         defaultPath: path.resolve('./css_examples'),
         properties: ['openFile'],
         filters: [
@@ -1151,20 +1166,21 @@ class Editor extends Component {
           { name: '*.jpg', extensions: ['jpeg'] },
           { name: '*', extensions: ['*'] },
         ],
-      },
-      res => {
-        if (!res) return;
-        // const cheerio = require('cheerio');
+    };
+    electron.ipcRenderer.invoke("showOpenDialog",options).then((res)=>{
+      console.log(res);
         fabric.Image.fromURL(res[0], oImg => {
           // scale image down, and flip it, before adding it onto canvas
           // window.img=oImg;
           // console.log(oImg);
           canvas.add(oImg);
         });
-      }
-    );
+    }).catch((e)=>{
+      console.log(e);
+    })
   };
   render = () => {
+    const { classes } = this.props;
     let filepath = path.dirname(this.state.filename);
     let li_tools = tool_types.map((item, index) => {
       if (index === this.state.active_tool) {
@@ -1200,8 +1216,8 @@ class Editor extends Component {
         );
       }
     });
-    // console.log('=====================================');
-    // console.log(this.state);
+    console.log('=====================================');
+    console.log(this.state);
     let btn_undo, btn_redo;
     if (this.state.undo_disabled) {
       btn_undo = (
@@ -1225,6 +1241,97 @@ class Editor extends Component {
     if (canvas) the_width = canvas.getWidth();
     return (
       <div id="root_new">
+        <AppBar position="static">
+          <ToolBar>
+            <Typography color="inherit" className={classes.grow}>
+              drawing board
+            </Typography>
+            
+            <Button
+              color="inherit"
+              variant="outlined"
+              onClick={this.open_click}
+            >
+              open
+            </Button>
+            <Button
+              color="inherit"
+              variant="outlined"
+              onClick={this.save_click}
+            >
+              save
+            </Button>
+            <Button
+              color="inherit"
+              variant="outlined"
+              onClick={this.save_as_click}
+            >
+              save as
+            </Button>
+            <Button
+              color="inherit"
+              variant="outlined"
+              onClick={this.newfile}
+              style={{ margin: '0px 10px 0px 10px' }}
+            >
+              New
+            </Button>
+            <Select>
+              <MenuItem onClick={this.group}>
+                group
+              </MenuItem>
+              <MenuItem onClick={this.ungroup}>
+                ungroup
+              </MenuItem>
+              <MenuItem onClick={this.front}>
+                front
+              </MenuItem>
+              <MenuItem onClick={this.back}>
+                back
+              </MenuItem>
+              <MenuItem onClick={this.downward}>
+                downward
+              </MenuItem>
+              <MenuItem onClick={this.upward}>
+                upward
+              </MenuItem>
+              <MenuItem onClick={this.Copy}>
+                copy
+              </MenuItem>
+              <MenuItem onClick={this.Paste}>
+                paste
+              </MenuItem>
+              <MenuItem onClick={this.selectAll}>
+                selectAll
+              </MenuItem>
+              <MenuItem onClick={this.selectNone}>
+                selectNone
+              </MenuItem>
+              <MenuItem onClick={this.superScript}>
+                superScript
+              </MenuItem>
+              <MenuItem onClick={this.subScript}>
+                subScript
+              </MenuItem>
+              <MenuItem onClick={this.removeScript}>
+                removeScript
+              </MenuItem>
+
+              <MenuItem onClick={this.delete1}>
+                delete
+              </MenuItem>
+              <MenuItem onClick={this.zoomToFitCanvas}>
+                fit
+              </MenuItem>
+              <MenuItem onClick={this.reset_zoom}>
+                unfit
+              </MenuItem>
+              <MenuItem onClick={this.add_image}>
+                image
+              </MenuItem>
+            </Select>
+          </ToolBar>
+        </AppBar>
         <DlgAbout
           showModal={this.state.show_about}
           closeModal={() => {
@@ -1237,62 +1344,8 @@ class Editor extends Component {
             this.setState({ show_color: false });
           }}
         />
-        <Browser onFileClick={this.onFileClick} />
-
         <div id="contain_edit">
           <div style={{ height: toolbar_h, backgroundColor: '#ccc' }}>
-            <button
-              style={{ margin: '10px 10px 10px 10px' }}
-              onClick={this.open_click}
-            >
-              open
-            </button>
-            <span
-              style={{
-                display: 'inline-block',
-                border: 'solid gray 2px',
-                margin: '2px 2px 2px 2px',
-              }}
-              ref="contactedit"
-              className={this.state.selectValue}
-            >
-              <button
-                style={{ margin: '0px 10px 0px 10px' }}
-                onClick={this.save_click}
-              >
-                save
-              </button>
-              <button
-                style={{ margin: '0px 10px 0px 10px' }}
-                onClick={this.save_as_click}
-              >
-                save as
-              </button>
-            </span>
-            <button
-              onClick={this.newfile}
-              style={{ margin: '0px 10px 0px 10px' }}
-            >
-              New
-            </button>
-            <button onClick={this.group}>group</button>
-            <button onClick={this.ungroup}>un group</button>
-            <button onClick={this.front}>置顶</button>
-            <button onClick={this.back}>置底</button>
-            <button onClick={this.downward}>下降</button>
-            <button onClick={this.upward}>上升</button>
-
-            <button onClick={this.Copy}>copy</button>
-            <button onClick={this.Paste}>Paste</button>
-            <button onClick={this.selectAll}>全选</button>
-            <button onClick={this.selectNone}>取消选择</button>
-            <button onClick={this.superScript}>上标</button>
-            <button onClick={this.subScript}>下标</button>
-            <button onClick={this.removeScript}>正常</button>
-            <button onClick={this.delete1}>delete</button>
-            <button onClick={this.zoomToFitCanvas}>fit</button>
-            <button onClick={this.reset_zoom}>unfit</button>
-            <button onClick={this.add_image}>image</button>
             <input
               type="range"
               style={{ display: 'inline', width: '100px' }}
@@ -1305,6 +1358,22 @@ class Editor extends Component {
             {btn_undo}
             {btn_redo}
             <span>{this.state.filename}</span>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                this.setState({ showPreview: true });
+              }}
+            >
+              set
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                this.setState({ show_prop: true });
+              }}
+            >
+              prop
+            </Button>
           </div>
           <div
             style={{
@@ -1312,9 +1381,10 @@ class Editor extends Component {
               flex: 1,
               width: '100%',
               height: `calc(100vh - ${toolbar_h})`,
+              display: 'flex',
             }}
           >
-            <div style={{ width: '52px', float: 'left' }}>
+            <div style={{ width: '52px' }}>
               <ul id="toolsul" className="tools">
                 {li_tools}
               </ul>
@@ -1330,6 +1400,7 @@ class Editor extends Component {
             >
               <canvas
                 id="c"
+                ref="canvas"
                 style={{
                   margin: '0px 10px 10px 10px',
                 }}
@@ -1339,38 +1410,28 @@ class Editor extends Component {
             </div>
           </div>
         </div>
-        <div id="contain_preview">
-          <button
-            onClick={() => {
-              if (this.state.showPreview === 'none') {
-                this.setState({ showPreview: 'block' });
-              } else {
-                this.setState({ showPreview: 'none' });
-              }
-            }}
-          >
-            set
-          </button>
-          <div
-            style={{
-              margin: '10 10 10 10',
-              display: this.state.showPreview,
-            }}
-          >
+        <Dialog
+          open={this.state.showPreview}
+          onClose={() => {
+            this.setState({ showPreview: false });
+          }}
+        >
+          <DialogTitle>set</DialogTitle>
+          <DialogContent>
             <label>background color:</label>
             <InputColor
               value={this.state.background_color}
               onChange={this.background_color_change}
             />
             <br />
-            <label>width:</label>
-            <input
+            <TextField
+              label="width"
               value={this.state.canvasSize.width}
               onChange={this.width_change}
             />
             <br />
             <label>height:</label>
-            <input
+            <TextField
               value={this.state.canvasSize.height}
               onChange={this.height_change}
             />
@@ -1389,7 +1450,7 @@ class Editor extends Component {
             </select>
             <br />
             <label>pen width:</label>
-            <input
+            <TextField
               value={this.state.pen_width}
               onChange={this.pen_width_change}
             />
@@ -1412,93 +1473,39 @@ class Editor extends Component {
             <br />
 
             <label>Shadow width:</label>
-            <input
+            <TextField
               value={this.state.shadow_width}
               onChange={this.shadow_width_change}
             />
             <br />
 
             <label>Shadow offset:</label>
-            <input
+            <TextField
               value={this.state.shadow_offset}
               onChange={this.shadow_offset_change}
             />
             <br />
             <label>fill color:</label>
             <InputColor value={this.state.fill} onChange={this.onChange_fill} />
-          </div>
-        </div>
-        <div id="contain_prop">
-          <div
-            style={{
-              margin: '10 10 10 10',
-              display: this.state.show_prop,
-            }}
-          >
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={this.state.show_prop}
+          onClose={() => {
+            this.setState({ show_prop: false });
+          }}
+        >
+          <DialogTitle>prop</DialogTitle>
+          <DialogContent>
             <PropEdit
               selected={this.state.selected}
               propChange={this.propChange}
             />
-          </div>
-          <button
-            onClick={() => {
-              if (this.state.show_prop === 'none') {
-                this.setState({ show_prop: 'block' });
-              } else {
-                this.setState({ show_prop: 'none' });
-              }
-            }}
-          >
-            prop
-          </button>
-        </div>
-        <style jsx="true">{`
-          body {
-            margin: 0 0 0 0;
-            padding: 0 0 0 0;
-          }
-          #root_new {
-            margin: 0 0 0 0;
-            padding: 0 0 0 0;
-            display:flex;
-            flex-direction:row;
-            width: 100%;
-            height: 100%;
-          }
-          #contain_edit {
-            height: 100vh;
-            flex:1;
-            display:flex;
-            flex-direction:column;
-          }
-          #contain_prop {
-            background-color:#eee;
-            position:fixed;
-            display:flex;
-            flex-direction:column;
-            right:0;
-            bottom:0;
-            margin:0 0 0 0;
-            padding：0 0 0 0;
-            overflow: auto;
-            z-index:100;
-          }
-          #contain_preview {
-            background-color:#eee;
-            position:fixed;
-            display:flex;
-            flex-direction:column;
-            right:0;
-            top:0;
-            margin:0 0 0 0;
-            padding：0 0 0 0;
-            overflow: auto;
-            z-index:100;
-          }
-        `}</style>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   };
 }
 
-export default Editor;
+export default withStyles(styles)(Editor);

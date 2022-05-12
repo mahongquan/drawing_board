@@ -3,10 +3,10 @@ const path = window.require('path');
 function isObject(val) {
   return val != null && typeof val === 'object' && Array.isArray(val) === false;
 }
-const initpath = window.require('electron').ipcRenderer.sendSync('getpath');
+const initpath = __dirname;//window.require('electron').ipcRenderer.sendSync('getpath');
 class Data {
-  static saveconfig = (state) => {
-    Data.config.state=state;
+  static saveconfig = state => {
+    Data.config.state = state;
     const configName = 'config.json';
     let configPath = path.join(initpath, configName);
     fs.writeFileSync(configPath, JSON.stringify(Data.config));
@@ -37,11 +37,11 @@ class Data {
         Data.config.website = 'http://github.com/mahongquan/drawing_board';
       }
       if (!Data.config.state) {
-        Data.config.state={
+        Data.config.state = {
           background_color: '#002200',
           undo_disabled: true,
           redo_disabled: true,
-          fill:"rgba(100,200,123,0.5)",
+          fill: 'rgba(100,200,123,0.5)',
           zoom: 1,
           mode: 'Pencil',
           shadow_color: '#00FF00',
@@ -58,7 +58,7 @@ class Data {
           selectValue: '',
           active_tool: 0,
           pen_width: 10,
-          pen_color: "#0000ff",
+          pen_color: '#0000ff',
           selected: null,
         };
       }
@@ -67,6 +67,32 @@ class Data {
       return {};
     }
   };
-  static config = {};
+  static config = {
+    author: {},
+    state: {
+      background_color: '#002200',
+      undo_disabled: true,
+      redo_disabled: true,
+      fill: 'rgba(100,200,123,0.5)',
+      zoom: 1,
+      mode: 'Pencil',
+      shadow_color: '#00FF00',
+      shadow_width: 10,
+      shadow_offset: 4,
+      show_about: false,
+      show_color: false,
+      show_prop: 'none',
+      canvasSize: { width: 1000, height: 700 },
+      showPreview: 'none',
+      html_editor_h: 600,
+      edit_width: 800,
+      filename: '',
+      selectValue: '',
+      active_tool: 0,
+      pen_width: 10,
+      pen_color: '#0000ff',
+      selected: null,
+    },
+  };
 }
 export default Data;

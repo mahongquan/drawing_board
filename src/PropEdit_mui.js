@@ -1,5 +1,6 @@
 import React from 'react';
-import InputColor from './InputColor';
+import InputColor from './InputColor_mui';
+import TextField from '@mui/material/TextField';
 const fprops = [
   'left',
   'top',
@@ -45,7 +46,7 @@ export default class App extends React.Component {
     }
   }
   componentWillReceiveProps(nextProps) {
-    // console.log(nextProps)
+    console.log(nextProps);
     if (nextProps.selected) {
       this.setState(nextProps.selected[0]);
     }
@@ -88,7 +89,7 @@ export default class App extends React.Component {
   };
 
   render = () => {
-    // console.log(this.state);
+    console.log(this.state);
     let trs = fprops.map((item, index) => {
       if (this.state[item]) {
         if (tprops[index] === 'color') {
@@ -133,7 +134,7 @@ export default class App extends React.Component {
               </div>
             </td>
             <td>
-              <input
+              <TextField
                 data={item}
                 value={this.state[item]}
                 onChange={e => {

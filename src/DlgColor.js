@@ -1,4 +1,5 @@
 import React from 'react';
+// import { Modal } from 'react-bootstrap';
 import { Modal } from 'react-bootstrap';
 import data from './Data';
 var { shell } = window.require('electron'); //
@@ -71,12 +72,10 @@ export default class App extends React.Component {
               </tr>
             </tbody>
           </table>
-        </Modal.Body>
-        <Modal.Footer>
           <button className="btn btn-primary" onClick={this.props.closeModal}>
             确定
           </button>
-        </Modal.Footer>
+        </Modal.Body>
       </Modal>
     );
   };
