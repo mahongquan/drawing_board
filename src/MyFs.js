@@ -1,5 +1,5 @@
-var path = require('path');
-var fs = require('fs');
+var path = window.require('path');
+var fs = window.require('fs');
 const { StringDecoder } = require('string_decoder');
 const decoder = new StringDecoder('utf8');
 // console.log(path.resolve(__dirname));
