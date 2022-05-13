@@ -1,11 +1,12 @@
 import React from 'react';
 import { SketchPicker } from 'react-color';
-<<<<<<< HEAD
 import { sprintf } from "printj/printj.mjs";
-=======
-import sprintf from 'sprintf';
->>>>>>> 7319b023710459d8a3eb212bf5bccd72a0f4b101
-import { Modal } from 'react-bootstrap';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
 
 export default class InputColor extends React.Component {
   constructor(props) {
@@ -48,23 +49,31 @@ export default class InputColor extends React.Component {
         >
           {this.props.value}
         </label>
-        <Modal show={this.state.showModal} onClose={this.closeModal}>
-          <Modal.Body>
+        <Dialog open={this.state.showModal} onClose={this.closeModal}>
+          <DialogContent>
             <SketchPicker
               disableAlpha={false}
               color={this.state.color}
               onChangeComplete={this.onChangeComplete}
             />
-          </Modal.Body>
-          <Modal.Footer>
-            <button className="btn btn-primary" onClick={this.ok}>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              variant="outlined"
+              className="btn btn-primary"
+              onClick={this.ok}
+            >
               确定
-            </button>
-            <button className="btn btn-primary" onClick={this.closeModal}>
+            </Button>
+            <Button
+              variant="outlined"
+              className="btn btn-primary"
+              onClick={this.closeModal}
+            >
               取消
-            </button>
-          </Modal.Footer>
-        </Modal>
+            </Button>
+          </DialogActions>
+        </Dialog>
       </span>
     );
   };

@@ -3,7 +3,7 @@ const path = window.require('path');
 function isObject(val) {
   return val != null && typeof val === 'object' && Array.isArray(val) === false;
 }
-const initpath = window.require('electron').ipcRenderer.sendSync('getpath');
+const initpath = __dirname;//window.require('electron').ipcRenderer.sendSync('getpath');
 class Data {
   static saveconfig = state => {
     Data.config.state = state;
