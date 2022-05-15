@@ -1,9 +1,9 @@
-const fs = window.require('fs');
-const path = window.require('path');
+const fs = window.require?window.require('fs'):null;
+const path = window.require?window.require('path'):null;
 function isObject(val) {
   return val != null && typeof val === 'object' && Array.isArray(val) === false;
 }
-const initpath = __dirname;//window.require('electron').ipcRenderer.sendSync('getpath');
+const initpath = window.require?__dirname:null;//window.require('electron').ipcRenderer.sendSync('getpath');
 class Data {
   static saveconfig = state => {
     Data.config.state = state;

@@ -5,7 +5,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import data from './Data';
-var { shell } = window.require('electron'); //
+const  shell  = window.require?window.require('electron').shell:null; //
 export default class App extends React.Component {
   onClick = () => {
     shell.openExternal(data.config.website);
