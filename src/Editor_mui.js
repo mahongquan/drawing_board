@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import DlgAbout from './DlgAbout_mui';
 import DlgColor from './DlgColor_mui';
 import data from './Data';
-// import MyFs from './MyFs';
 import { SketchPicker } from 'react-color';
 import PropEdit from './PropEdit2';
 import InputColor from './InputColor_mui';
@@ -20,10 +19,12 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import { sprintf } from "printj/printj.mjs";
 import { fabric } from "fabric";
-const path = window.require?window.require('path'):null;
-const fs = window.require?window.require('fs'):null;
-const electron = window.require?window.require('electron'):null;
-const ipcRenderer  = window.require?window.require('electron').ipcRenderer:null; //
+console.log("myAPI=============")
+console.log(window.myAPI)
+const path = window.myAPI?window.myAPI.path:null;
+const fs = window.myAPI?window.myAPI.fs:null;
+// const electron = null;
+// const ipcRenderer  = null; //
 
 const styles = {
   root: { flexGrow: 1 },
@@ -81,16 +82,16 @@ function drawArrow(fromX, fromY, toX, toY, theta, headlen) {
     botY = headlen * Math.sin(angle2);
   var arrowX = fromX - topX,
     arrowY = fromY - topY;
-  var path = ' M ' + fromX + ' ' + fromY;
-  path += ' L ' + toX + ' ' + toY;
+  var path1 = ' M ' + fromX + ' ' + fromY;
+  path1 += ' L ' + toX + ' ' + toY;
   arrowX = toX + topX;
   arrowY = toY + topY;
-  path += ' M ' + arrowX + ' ' + arrowY;
-  path += ' L ' + toX + ' ' + toY;
+  path1 += ' M ' + arrowX + ' ' + arrowY;
+  path1 += ' L ' + toX + ' ' + toY;
   arrowX = toX + botX;
   arrowY = toY + botY;
-  path += ' L ' + arrowX + ' ' + arrowY;
-  return path;
+  path1 += ' L ' + arrowX + ' ' + arrowY;
+  return path1;
 }
 const fontSize = 16;
 const toolbar_h = 50;
@@ -98,24 +99,24 @@ class Editor extends Component {
   constructor() {
     super();
     data.getconfig();
-    if(ipcRenderer){
-      ipcRenderer.on('request_close', () => {
-        data.saveconfig(this.state);
-        ipcRenderer.send('close');
-      });
-      ipcRenderer.on('save', () => {
-        this.save_click();
-      });
-      ipcRenderer.on('new', () => {
-        this.newfile();
-      });
-      ipcRenderer.on('open', () => {
-        this.open_click();
-      });
-      ipcRenderer.on('about', () => {
-        this.setState({ show_about: true });
-      });
-    }
+    // if(ipcRenderer){
+    //   ipcRenderer.on('request_close', () => {
+    //     data.saveconfig(this.state);
+    //     ipcRenderer.send('close');
+    //   });
+    //   ipcRenderer.on('save', () => {
+    //     this.save_click();
+    //   });
+    //   ipcRenderer.on('new', () => {
+    //     this.newfile();
+    //   });
+    //   ipcRenderer.on('open', () => {
+    //     this.open_click();
+    //   });
+    //   ipcRenderer.on('about', () => {
+    //     this.setState({ show_about: true });
+    //   });
+    // }
     // data.config.state.filename="";
     this.state = data.config.state;
     this.history = [];
@@ -570,7 +571,7 @@ class Editor extends Component {
   //   this.setState({ html: content, showPreview: false });
   // };
   open_click = () => {
-    console.log(electron)
+    // console.log(electron)
     var options ={
       defaultPath: path.resolve('./css_examples'),
       properties: ['openFile'],
@@ -581,7 +582,7 @@ class Editor extends Component {
         { name: '*', extensions: ['*'] },
       ],
     };
-    electron.ipcRenderer.invoke("showOpenDialog",options).then((res)=>{
+    window.myAPI.showOpenDialog(options).then((res)=>{
       console.log(res);
       if (res){
         this.openfile(res[0]);
@@ -660,7 +661,7 @@ class Editor extends Component {
         { name: '*', extensions: ['*'] },
       ],
     };
-    electron.ipcRenderer.invoke("showSaveDialog",options).then((res)=>{
+    window.myAPI.showSaveDialog(options).then((res)=>{
        console.log(res);
        if (res) {
           this.anim();

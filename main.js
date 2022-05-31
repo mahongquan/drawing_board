@@ -43,25 +43,36 @@ ipcMain.on('close', (event, arg) => {
   safeExit=true;
   mainWindow.close();
 })
+ipcMain.handle('showOpenDialog', async function (e, options) {
+    const result = await dialog.showOpenDialog(mainWindow, options)
+    return result.filePaths
+})
+
+ipcMain.handle('showSaveDialog', async function (e, options) {
+  const result = await dialog.showSaveDialog(mainWindow, options)
+  return result.filePath
+})
 const devMode = (process.argv || []).indexOf('--local') !== -1;
 let indexUrl;
 if(devMode){
    indexUrl=`file://${__dirname}/src/index.html`;
 }
 else{
-   indexUrl=`file://${__dirname}/build/index.html`; 
+   indexUrl=`file://${__dirname}/dist/index.html`; 
 }
 const createWindow = () => {
   // console.log("createWindow");
 
   // Create the browser window.
-
+  file_preload=`${__dirname}/preload.js`; 
+  console.log("preload")
+  console.log(file_preload)
   mainWindow = new BrowserWindow({
-
     width: 800,
-
     height: 600,
-
+    webPreferences: {
+      preload: file_preload
+    }
   });
   //menu
   const template=
@@ -119,8 +130,7 @@ const createWindow = () => {
           label: '退出',
           accelerator: 'Ctrl+E',
           click: (item, win) =>{
-             // console.log(win);
-             // console.log(mainWindow);
+             console.log(win);
              win.close();
           },
         }
@@ -140,29 +150,27 @@ const createWindow = () => {
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
   //
-  if (devMode) {
-      mainWindow.openDevTools();
-  }
+  mainWindow.openDevTools();
   // and load the index.html of the app.
 
   mainWindow.loadURL(indexUrl);
 
   // Open the DevTools.
 
-  // /mainWindow.webContents.openDevTools();
-  mainWindow.on('close', (e) => {
-    // console.log("close");
-    // console.log(e);
+  // mainWindow.webContents.openDevTools();
+  // mainWindow.on('close', (e) => {
+  //   // console.log("close");
+  //   // console.log(e);
 
-    if(!safeExit){
+  //   if(!safeExit){
 
-      e.preventDefault();
+  //     e.preventDefault();
 
-      mainWindow.webContents.send('request_close');
+  //     mainWindow.webContents.send('request_close');
 
-    }
+  //   }
 
-  });
+  // });
 
   //-----------------------------------------------------------------
 

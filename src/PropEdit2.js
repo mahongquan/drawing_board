@@ -83,6 +83,7 @@ export default class App extends React.Component {
   render = () => {
     console.log(this.state);
     console.log(this.props);
+    if(!this.props.selected){ return <div>no selected</div>}
     let obj=this.props.selected[0];
     for(var attr in obj){
       if(!_.isFunction(obj[attr])){
