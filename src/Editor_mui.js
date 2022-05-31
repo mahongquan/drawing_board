@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import DlgAbout from './DlgAbout_mui';
 import DlgColor from './DlgColor_mui';
 import data from './Data';
-import MyFs from './MyFs';
+// import MyFs from './MyFs';
 import { SketchPicker } from 'react-color';
 import PropEdit from './PropEdit2';
 import InputColor from './InputColor_mui';
@@ -19,6 +19,12 @@ import DialogActions from '@mui/material/DialogActions';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import { sprintf } from "printj/printj.mjs";
+import { fabric } from "fabric";
+const path = window.require?window.require('path'):null;
+const fs = window.require?window.require('fs'):null;
+const electron = window.require?window.require('electron'):null;
+const ipcRenderer  = window.require?window.require('electron').ipcRenderer:null; //
+
 const styles = {
   root: { flexGrow: 1 },
   grow: { flexGrow: 1 },
@@ -86,32 +92,30 @@ function drawArrow(fromX, fromY, toX, toY, theta, headlen) {
   path += ' L ' + arrowX + ' ' + arrowY;
   return path;
 }
-const path = window.require('path');
-const fs = window.require('fs');
-const electron = window.require('electron');
-const { ipcRenderer } = window.require('electron'); //
 const fontSize = 16;
 const toolbar_h = 50;
 class Editor extends Component {
   constructor() {
     super();
     data.getconfig();
-    ipcRenderer.on('request_close', () => {
-      data.saveconfig(this.state);
-      ipcRenderer.send('close');
-    });
-    ipcRenderer.on('save', () => {
-      this.save_click();
-    });
-    ipcRenderer.on('new', () => {
-      this.newfile();
-    });
-    ipcRenderer.on('open', () => {
-      this.open_click();
-    });
-    ipcRenderer.on('about', () => {
-      this.setState({ show_about: true });
-    });
+    if(ipcRenderer){
+      ipcRenderer.on('request_close', () => {
+        data.saveconfig(this.state);
+        ipcRenderer.send('close');
+      });
+      ipcRenderer.on('save', () => {
+        this.save_click();
+      });
+      ipcRenderer.on('new', () => {
+        this.newfile();
+      });
+      ipcRenderer.on('open', () => {
+        this.open_click();
+      });
+      ipcRenderer.on('about', () => {
+        this.setState({ show_about: true });
+      });
+    }
     // data.config.state.filename="";
     this.state = data.config.state;
     this.history = [];
@@ -549,22 +553,22 @@ class Editor extends Component {
       dragging: true,
     });
   };
-  onFileClick = filepath => {
-    filepath = MyFs.toLocalPath(filepath);
-    this.setState({ filename: filepath });
-    let content = fs.readFileSync(filepath, { encoding: 'utf-8', flag: 'r' });
-    if (path.parse(filepath).ext === '.svg') {
-      fabric.loadSVGFromString(content, function(objects, options) {
-        var obj = fabric.util.groupSVGElements(objects, options);
-        canvas.clear();
-        canvas.add(obj).renderAll();
-      });
-    } else if (path.parse(filepath).ext === '.json') {
-      canvas.loadFromJSON(content);
-    }
+  // onFileClick = filepath => {
+  //   filepath = MyFs.toLocalPath(filepath);
+  //   this.setState({ filename: filepath });
+  //   let content = fs.readFileSync(filepath, { encoding: 'utf-8', flag: 'r' });
+  //   if (path.parse(filepath).ext === '.svg') {
+  //     fabric.loadSVGFromString(content, function(objects, options) {
+  //       var obj = fabric.util.groupSVGElements(objects, options);
+  //       canvas.clear();
+  //       canvas.add(obj).renderAll();
+  //     });
+  //   } else if (path.parse(filepath).ext === '.json') {
+  //     canvas.loadFromJSON(content);
+  //   }
 
-    this.setState({ html: content, showPreview: false });
-  };
+  //   this.setState({ html: content, showPreview: false });
+  // };
   open_click = () => {
     console.log(electron)
     var options ={
@@ -1186,7 +1190,7 @@ class Editor extends Component {
   };
   render = () => {
     const { classes } = this.props;
-    let filepath = path.dirname(this.state.filename);
+    // let filepath = path.dirname(this.state.filename);
     let li_tools = tool_types.map((item, index) => {
       if (index === this.state.active_tool) {
         return (
