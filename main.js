@@ -43,6 +43,7 @@ ipcMain.on('close', (event, arg) => {
   safeExit=true;
   mainWindow.close();
 })
+
 ipcMain.handle('showOpenDialog', async function (e, options) {
     const result = await dialog.showOpenDialog(mainWindow, options)
     return result.filePaths

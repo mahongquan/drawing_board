@@ -21,13 +21,16 @@
   "author": "GitHub",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "~1.8.2"
+    "electron": "latest"
   },
   "dependencies": {
-    "react": "^16.5.2",
-    "react-bootstrap": "^0.32.4",
-    "react-color": "^2.14.1",
-    "react-dom": "^16.5.2",
-    "react-scripts": "^2.0.4"
+    "@mui/icons-material": "latest",
+    "@mui/lab": "latest",
+    "@mui/material": "latest",
+    "@mui/styles": "latest",
+    "react": "latest",
+    "react-bootstrap": "latest",
+    "react-color": "latest",
+    "react-dom": "latest",
   }
 }
