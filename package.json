@@ -31,6 +31,6 @@
     "react": "latest",
     "react-bootstrap": "latest",
     "react-color": "latest",
-    "react-dom": "latest",
+    "react-dom": "latest"
   }
 }
