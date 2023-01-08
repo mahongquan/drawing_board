@@ -582,7 +582,7 @@ class Editor extends Component {
         { name: '*', extensions: ['*'] },
       ],
     };
-    window.myAPI.showOpenDialog(options).then((res)=>{
+    window.myAPI.electron.ipcRenderer.invoke("showOpenDialog",options).then((res)=>{
       console.log(res);
       if (res){
         this.openfile(res[0]);
@@ -661,7 +661,7 @@ class Editor extends Component {
         { name: '*', extensions: ['*'] },
       ],
     };
-    window.myAPI.showSaveDialog(options).then((res)=>{
+    window.myAPI.electron.ipcRenderer.invoke("showSaveDialog",options).then((res)=>{
        console.log(res);
        if (res) {
           this.anim();
